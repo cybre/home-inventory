@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+
+
+.cassandraWorkbench
+.cassandraWorkbench.jsonc
+.vscode/settings.json
