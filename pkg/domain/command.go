@@ -42,9 +42,9 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		aggregate.ApplyEvent(event.eventData)
 	}
 
-	if err := aggregate.HandleCommand(c); err != nil {
+	if err := aggregate.HandleCommand(ctx, c); err != nil {
 		return err
 	}
 
-	return h.eventStore.StoreEvents(ctx, aggregateContext.Events())
+	return h.eventStore.StoreEvents(ctx, aggregate.Events())
 }

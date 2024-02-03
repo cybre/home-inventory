@@ -12,8 +12,8 @@ type AggregateContext struct {
 	events []Event
 }
 
-func NewAggregateContext(aggregateType AggregateType, aggregateID AggregateID, version uint) *AggregateContext {
-	return &AggregateContext{
+func NewAggregateContext(aggregateType AggregateType, aggregateID AggregateID, version uint) AggregateContext {
+	return AggregateContext{
 		aggregateType: aggregateType,
 		aggregateID:   aggregateID,
 		version:       version,

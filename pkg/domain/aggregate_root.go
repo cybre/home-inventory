@@ -1,15 +1,18 @@
 package domain
 
+import "context"
+
 type AggregateID string
 type AggregateType string
 
 // AggregateRoot represents the interface that all aggregates in the system should implement.
 type AggregateRoot interface {
 	ApplyEvent(EventData)
-	HandleCommand(Command) error
+	HandleCommand(context.Context, Command) error
+	Events() []Event
 }
 
-type AggregateRootFactoryFunc func(context *AggregateContext) AggregateRoot
+type AggregateRootFactoryFunc func(context AggregateContext) AggregateRoot
 
 type AggregateRootRegistry struct {
 	aggregates map[AggregateType]AggregateRootFactoryFunc
@@ -25,7 +28,7 @@ func (r *AggregateRootRegistry) RegisterAggregateRoot(aggregateType AggregateTyp
 	r.aggregates[aggregateType] = aggregateFactory
 }
 
-func (r *AggregateRootRegistry) GetAggregateRoot(aggregateContext *AggregateContext) (AggregateRoot, bool) {
+func (r *AggregateRootRegistry) GetAggregateRoot(aggregateContext AggregateContext) (AggregateRoot, bool) {
 	aggregateFactory, ok := r.aggregates[aggregateContext.AggregateType()]
 	if ok {
 		return aggregateFactory(aggregateContext), true
@@ -44,6 +47,6 @@ func RegisterAggregateRoot(aggregateType AggregateType, aggregateFactory Aggrega
 	aggregateRegistry.RegisterAggregateRoot(aggregateType, aggregateFactory)
 }
 
-func GetAggregateRoot(aggregateContext *AggregateContext) (AggregateRoot, bool) {
+func GetAggregateRoot(aggregateContext AggregateContext) (AggregateRoot, bool) {
 	return aggregateRegistry.GetAggregateRoot(aggregateContext)
 }
