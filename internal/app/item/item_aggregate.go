@@ -1,9 +1,10 @@
-package app
+package item
 
 import (
 	"context"
 	"fmt"
 
+	s "github.com/cybre/home-inventory/internal/app/shared"
 	"github.com/cybre/home-inventory/pkg/domain"
 )
 
@@ -40,39 +41,35 @@ func (a *ItemAggregate) ApplyEvent(event domain.EventData) {
 	}
 }
 
-func (a *ItemAggregate) HandleCommand(ctx context.Context, command domain.Command) error {
+func (a *ItemAggregate) HandleCommand(ctx context.Context, command domain.Command) ([]domain.EventData, error) {
 	switch c := command.(type) {
 	case AddItemCommand:
 		return a.handleAddItemCommand(ctx, c)
 	case UpdateItemCommand:
 		return a.handleUpdateItemCommand(ctx, c)
 	default:
-		return domain.ErrUnknownCommand
+		return nil, domain.ErrUnknownCommand
 	}
 }
 
-func (a *ItemAggregate) handleAddItemCommand(ctx context.Context, c AddItemCommand) error {
+func (a *ItemAggregate) handleAddItemCommand(ctx context.Context, c AddItemCommand) ([]domain.EventData, error) {
 	if a.Version() != initialAggregateVersion {
-		return ErrItemAlreadyExists
+		return nil, ErrItemAlreadyExists
 	}
 
-	a.StoreEvent(ItemAddedEvent{
+	return s.Events(ItemAddedEvent{
 		Name: c.Name,
 	})
-
-	return nil
 }
 
-func (a *ItemAggregate) handleUpdateItemCommand(ctx context.Context, c UpdateItemCommand) error {
+func (a *ItemAggregate) handleUpdateItemCommand(ctx context.Context, c UpdateItemCommand) ([]domain.EventData, error) {
 	if a.Version() == initialAggregateVersion {
-		return ErrItemDoesNotExist
+		return nil, ErrItemDoesNotExist
 	}
 
-	a.StoreEvent(ItemUpdatedEvent{
+	return s.Events(ItemUpdatedEvent{
 		Name: c.Name,
 	})
-
-	return nil
 }
 
 func (a *ItemAggregate) applyItemAddedEvent(e ItemAddedEvent) {

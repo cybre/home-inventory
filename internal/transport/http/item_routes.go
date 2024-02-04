@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cybre/home-inventory/internal/app"
+	"github.com/cybre/home-inventory/internal/app/item"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,7 +14,7 @@ func buildItemRoutes(router chi.Router, itemService ItemService) {
 
 func addItemHandler(itemService ItemService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var data app.AddItemCommandData
+		var data item.AddItemCommandData
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -8,8 +8,7 @@ type AggregateType string
 // AggregateRoot represents the interface that all aggregates in the system should implement.
 type AggregateRoot interface {
 	ApplyEvent(EventData)
-	HandleCommand(context.Context, Command) error
-	Events() []Event
+	HandleCommand(context.Context, Command) ([]EventData, error)
 }
 
 type AggregateRootFactoryFunc func(context AggregateContext) AggregateRoot

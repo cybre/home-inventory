@@ -1,6 +1,11 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+
+	"github.com/cybre/home-inventory/pkg/utils"
+)
 
 type Command interface {
 	AggregateType() AggregateType
@@ -42,9 +47,19 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		aggregate.ApplyEvent(event.eventData)
 	}
 
-	if err := aggregate.HandleCommand(ctx, c); err != nil {
+	result, err := aggregate.HandleCommand(ctx, c)
+	if err != nil {
 		return err
 	}
 
-	return h.eventStore.StoreEvents(ctx, aggregate.Events())
+	return h.eventStore.StoreEvents(ctx, utils.Map(result, func(i uint, event EventData) Event {
+		return Event{
+			aggregateType: c.AggregateType(),
+			aggregateID:   c.AggregateID(),
+			eventType:     event.EventType(),
+			eventData:     event,
+			timestamp:     time.Now().UnixMilli(),
+			version:       aggregateContext.Version() + i + 1,
+		}
+	}))
 }
