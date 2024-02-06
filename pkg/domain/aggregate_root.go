@@ -7,6 +7,9 @@ type AggregateType string
 
 // AggregateRoot represents the interface that all aggregates in the system should implement.
 type AggregateRoot interface {
+	AggregateID() AggregateID
+	AggregateType() AggregateType
+	Version() uint
 	ApplyEvent(EventData)
 	HandleCommand(context.Context, Command) ([]EventData, error)
 }
