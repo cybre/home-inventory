@@ -28,7 +28,7 @@ func NewCassandraSession(hosts []string, keyspace string) (*gocql.Session, error
 		return nil, fmt.Errorf("failed to create database instance for migrations: %w", err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://db/migrations", "cassandra", databaseInstance)
+	m, err := migrate.NewWithDatabaseInstance("file://migrations", "cassandra", databaseInstance)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create migrations: %w", err)
 	}
