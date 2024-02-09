@@ -1,4 +1,4 @@
-package infrastructure
+package cassandra
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func NewCassandraSession(hosts []string, keyspace string) (*gocql.Session, error) {
+func NewSession(hosts []string, keyspace string) (*gocql.Session, error) {
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Keyspace = keyspace
 

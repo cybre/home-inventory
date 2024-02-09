@@ -6,23 +6,32 @@ import (
 
 	"github.com/cybre/home-inventory/internal/app/item"
 	"github.com/cybre/home-inventory/internal/infrastructure"
+	"github.com/cybre/home-inventory/internal/infrastructure/cassandra"
+	"github.com/cybre/home-inventory/internal/infrastructure/kafka"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
 	"github.com/cybre/home-inventory/pkg/domain"
 )
 
 func main() {
-	cassandraSession, err := infrastructure.NewCassandraSession([]string{"127.0.0.1:9042"}, "home_inventory")
+	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
+	domain.RegisterEvent(item.ItemAddedEvent{})
+	domain.RegisterEvent(item.ItemUpdatedEvent{})
+
+	cassandraSession, err := cassandra.NewSession([]string{"127.0.0.1:9042"}, "home_inventory")
 	if err != nil {
 		panic(err)
 	}
 	defer cassandraSession.Close()
 
-	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
-	commandBus := domain.NewCommandBus(eventStore)
+	kafkaProducer, err := kafka.NewProducer([]string{"127.0.0.1:9092"}, "home-inventory.events")
+	if err != nil {
+		panic(err)
+	}
+	defer kafkaProducer.Close()
 
-	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
-	domain.RegisterEvent(item.ItemAddedEvent{})
-	domain.RegisterEvent(item.ItemUpdatedEvent{})
+	eventPublisher := infrastructure.NewKafkaEventPublisher(kafkaProducer)
+	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
+	commandBus := domain.NewCommandBus(eventStore, eventPublisher)
 
 	itemService := item.NewItemService(commandBus)
 

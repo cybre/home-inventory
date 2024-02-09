@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/cybre/home-inventory/pkg/domain"
@@ -23,24 +24,24 @@ func NewCassandraEventStore(session *gocql.Session) *CassandraEventStore {
 func (es *CassandraEventStore) StoreEvents(ctx context.Context, events []domain.Event) error {
 	batch := es.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
 	for _, event := range events {
-		eventData, err := json.Marshal(event.EventData())
+		eventData, err := json.Marshal(event.Data)
 		if err != nil {
 			return err
 		}
 
-		aggregateID, err := gocql.ParseUUID(string(event.AggregateID()))
+		aggregateID, err := gocql.ParseUUID(string(event.AggregateID))
 		if err != nil {
 			return err
 		}
 
 		batch.Query(
 			"INSERT INTO event_store (aggregate_type, aggregate_id, event_type, event_data, timestamp, version) VALUES (?, ?, ?, ?, ?, ?) IF NOT EXISTS",
-			event.AggregateType(),
+			event.AggregateType,
 			aggregateID,
-			event.EventType(),
+			event.EventType,
 			eventData,
-			event.Timestamp(),
-			event.Version(),
+			event.Timestamp,
+			event.Version,
 		)
 	}
 
@@ -50,7 +51,7 @@ func (es *CassandraEventStore) StoreEvents(ctx context.Context, events []domain.
 func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, aggregateID domain.AggregateID) ([]domain.Event, error) {
 	aggregateUUID, err := gocql.ParseUUID(string(aggregateID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse aggregate id: %w", err)
 	}
 
 	scanner := es.session.Query(
@@ -69,7 +70,7 @@ func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, agg
 		)
 
 		if err := scanner.Scan(&eventType, &eventData, &timestamp, &version); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan event: %w", err)
 		}
 
 		eventDataInstance, ok := domain.GetEvent(domain.EventType(eventType))
@@ -78,12 +79,19 @@ func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, agg
 		}
 
 		if err := json.NewDecoder(bytes.NewReader(eventData)).Decode(eventDataInstance); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to decode event data: %w", err)
 		}
 
 		eventDataInstanceValue := reflect.ValueOf(eventDataInstance).Elem().Interface().(domain.EventData)
 
-		events = append(events, domain.NewEvent(aggregateType, aggregateID, domain.EventType(eventType), eventDataInstanceValue, timestamp, version))
+		events = append(events, domain.Event{
+			AggregateType: aggregateType,
+			AggregateID:   aggregateID,
+			EventType:     domain.EventType(eventType),
+			Data:          eventDataInstanceValue,
+			Timestamp:     timestamp,
+			Version:       version,
+		})
 	}
 
 	return events, nil

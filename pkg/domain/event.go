@@ -1,53 +1,23 @@
 package domain
 
-import "reflect"
+import (
+	"encoding/json"
+	"reflect"
+)
 
-// EventType represents the type of an event.
 type EventType string
 
-// Event represents an event.
 type Event struct {
-	aggregateType AggregateType
-	aggregateID   AggregateID
-	eventType     EventType
-	eventData     EventData
-	timestamp     int64
-	version       uint
+	AggregateType AggregateType `json:"aggregate_type"`
+	AggregateID   AggregateID   `json:"aggregate_id"`
+	EventType     EventType     `json:"event_type"`
+	Data          EventData     `json:"event_data"`
+	Timestamp     int64         `json:"timestamp"`
+	Version       uint          `json:"version"`
 }
 
-func NewEvent(aggregateType AggregateType, aggregateID AggregateID, eventType EventType, eventData EventData, timestamp int64, version uint) Event {
-	return Event{
-		aggregateType: aggregateType,
-		aggregateID:   aggregateID,
-		eventType:     eventType,
-		eventData:     eventData,
-		timestamp:     timestamp,
-		version:       version,
-	}
-}
-
-func (e Event) AggregateType() AggregateType {
-	return e.aggregateType
-}
-
-func (e Event) AggregateID() AggregateID {
-	return e.aggregateID
-}
-
-func (e Event) EventType() EventType {
-	return e.eventType
-}
-
-func (e Event) EventData() EventData {
-	return e.eventData
-}
-
-func (e Event) Timestamp() int64 {
-	return e.timestamp
-}
-
-func (e Event) Version() uint {
-	return e.version
+func (e Event) Marshal() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 type EventData interface {

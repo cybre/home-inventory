@@ -3,6 +3,11 @@ package domain
 import "context"
 
 type AggregateID string
+
+func (id AggregateID) Marshal() []byte {
+	return []byte(id)
+}
+
 type AggregateType string
 
 // AggregateRoot represents the interface that all aggregates in the system should implement.

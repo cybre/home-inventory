@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/cybre/home-inventory/pkg/utils"
@@ -17,24 +18,32 @@ type EventStore interface {
 	StoreEvents(ctx context.Context, events []Event) error
 }
 
-type CommandBus struct {
-	eventStore EventStore
+type EventPublisher interface {
+	PublishEvents(ctx context.Context, events []Event) error
 }
 
-func NewCommandBus(eventStore EventStore) *CommandBus {
-	return &CommandBus{eventStore: eventStore}
+type CommandBus struct {
+	eventStore     EventStore
+	eventPublisher EventPublisher
+}
+
+func NewCommandBus(eventStore EventStore, eventPublisher EventPublisher) *CommandBus {
+	return &CommandBus{
+		eventStore:     eventStore,
+		eventPublisher: eventPublisher,
+	}
 }
 
 func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 	// TODO - distributed locking
 	events, err := h.eventStore.GetEvents(c.AggregateType(), c.AggregateID())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get events: %w", err)
 	}
 
 	aggregateVersion := uint(0)
 	if len(events) > 0 {
-		aggregateVersion = events[len(events)-1].version
+		aggregateVersion = events[len(events)-1].Version
 	}
 
 	aggregateContext := NewAggregateContext(c.AggregateType(), c.AggregateID(), aggregateVersion)
@@ -44,22 +53,32 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 	}
 
 	for _, event := range events {
-		aggregate.ApplyEvent(event.eventData)
+		aggregate.ApplyEvent(event.Data)
 	}
 
 	result, err := aggregate.HandleCommand(ctx, c)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to handle command: %w", err)
 	}
 
-	return h.eventStore.StoreEvents(ctx, utils.Map(result, func(i uint, event EventData) Event {
+	newEvents := utils.Map(result, func(i uint, event EventData) Event {
 		return Event{
-			aggregateType: c.AggregateType(),
-			aggregateID:   c.AggregateID(),
-			eventType:     event.EventType(),
-			eventData:     event,
-			timestamp:     time.Now().UnixMilli(),
-			version:       aggregateContext.Version() + i + 1,
+			AggregateType: c.AggregateType(),
+			AggregateID:   c.AggregateID(),
+			EventType:     event.EventType(),
+			Data:          event,
+			Timestamp:     time.Now().UnixMilli(),
+			Version:       aggregateContext.Version() + i + 1,
 		}
-	}))
+	})
+
+	if err := h.eventStore.StoreEvents(ctx, newEvents); err != nil {
+		return fmt.Errorf("failed to store events: %w", err)
+	}
+
+	if err := h.eventPublisher.PublishEvents(ctx, newEvents); err != nil {
+		return fmt.Errorf("failed to publish events: %w", err)
+	}
+
+	return nil
 }
