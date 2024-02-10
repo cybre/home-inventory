@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 
-	item "github.com/cybre/home-inventory/internal/app/items"
+	"github.com/cybre/home-inventory/internal/app/inventory/item"
 	"github.com/cybre/home-inventory/internal/infrastructure"
 )
 

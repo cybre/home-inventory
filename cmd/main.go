@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/signal"
 
-	item "github.com/cybre/home-inventory/internal/app/items"
+	"github.com/cybre/home-inventory/internal/app/inventory"
+	"github.com/cybre/home-inventory/internal/app/inventory/item"
+	"github.com/cybre/home-inventory/internal/app/shared"
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/internal/transport/kafka"
@@ -25,7 +27,7 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
+	domain.RegisterAggregateRoot(shared.InventoryAggregateType, inventory.NewInventoryAggregate)
 	domain.RegisterEvent(item.ItemAddedEvent{})
 	domain.RegisterEvent(item.ItemUpdatedEvent{})
 

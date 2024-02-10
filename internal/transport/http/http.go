@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cybre/home-inventory/internal/app/items"
+	"github.com/cybre/home-inventory/internal/app/inventory/item"
 	"github.com/go-chi/chi/v5"
 )
 
 type ItemService interface {
-	AddItem(context.Context, items.AddItemCommandData) error
+	AddItem(context.Context, item.AddItemCommandData) error
 }
 
 func NewHTTPTransport(ctx context.Context, itemService ItemService) error {

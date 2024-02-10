@@ -1,4 +1,4 @@
-package items
+package item
 
 import "github.com/cybre/home-inventory/pkg/domain"
 
@@ -8,7 +8,10 @@ const (
 )
 
 type ItemAddedEvent struct {
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Barcode  string `json:"barcode"`
+	Quantity uint   `json:"quantity"`
 }
 
 func (e ItemAddedEvent) EventType() domain.EventType {
@@ -16,7 +19,10 @@ func (e ItemAddedEvent) EventType() domain.EventType {
 }
 
 type ItemUpdatedEvent struct {
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Barcode  string `json:"barcode"`
+	Quantity uint   `json:"quantity"`
 }
 
 func (e ItemUpdatedEvent) EventType() domain.EventType {
