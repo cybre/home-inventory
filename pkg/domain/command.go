@@ -36,9 +36,9 @@ func NewCommandBus(eventStore EventStore, eventPublisher EventPublisher) *Comman
 	}
 }
 
-func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
+func (cb *CommandBus) Dispatch(ctx context.Context, c Command) error {
 	// TODO - distributed locking
-	events, err := h.eventStore.GetEvents(c.AggregateType(), c.AggregateID())
+	events, err := cb.eventStore.GetEvents(c.AggregateType(), c.AggregateID())
 	if err != nil {
 		return fmt.Errorf("failed to fetch events for aggregate: %w", err)
 	}
@@ -84,11 +84,11 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		}
 	})
 
-	if err := h.eventStore.StoreEvents(ctx, newEvents); err != nil {
+	if err := cb.eventStore.StoreEvents(ctx, newEvents); err != nil {
 		return fmt.Errorf("failed to store events: %w", err)
 	}
 
-	if err := h.eventPublisher.PublishEvents(ctx, newEvents); err != nil {
+	if err := cb.eventPublisher.PublishEvents(ctx, newEvents); err != nil {
 		return fmt.Errorf("failed to publish events: %w", err)
 	}
 
