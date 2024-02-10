@@ -13,7 +13,6 @@ import (
 	kafkatransport "github.com/cybre/home-inventory/internal/transport/kafka"
 	"github.com/cybre/home-inventory/pkg/cassandra"
 	"github.com/cybre/home-inventory/pkg/domain"
-	"github.com/cybre/home-inventory/pkg/kafka"
 	"github.com/google/uuid"
 )
 
@@ -37,12 +36,6 @@ func main() {
 		panic(err)
 	}
 	defer cassandraSession.Close()
-
-	kafkaProducer, err := kafka.NewProducer(kafkaBrokers, eventsTopic, logger)
-	if err != nil {
-		panic(err)
-	}
-	defer kafkaProducer.Close()
 
 	eventMessaging, err := infrastructure.NewKafkaEventMessaging(kafkaBrokers, eventsTopic, logger)
 	if err != nil {
