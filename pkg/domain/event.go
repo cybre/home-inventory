@@ -20,7 +20,7 @@ type Event struct {
 func UnmarshalEvent(data []byte) (Event, error) {
 	var event map[string]interface{}
 	if err := json.Unmarshal(data, &event); err != nil {
-		return Event{}, fmt.Errorf("failed to unmarshal event: %w", err)
+		return Event{}, fmt.Errorf("failed to decode event: %w", err)
 	}
 
 	eventDataInstance, ok := GetEvent(EventType(event["event_type"].(string)))

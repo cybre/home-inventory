@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -78,7 +77,7 @@ func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, agg
 			return nil, domain.ErrEventTypeNotFound
 		}
 
-		if err := json.NewDecoder(bytes.NewReader(eventData)).Decode(eventDataInstance); err != nil {
+		if err := json.Unmarshal(eventData, eventDataInstance); err != nil {
 			return nil, fmt.Errorf("failed to decode event data: %w", err)
 		}
 
