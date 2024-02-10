@@ -3,8 +3,10 @@ package domain
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"github.com/cybre/home-inventory/pkg/logging"
 	"github.com/cybre/home-inventory/pkg/utils"
 )
 
@@ -38,7 +40,7 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 	// TODO - distributed locking
 	events, err := h.eventStore.GetEvents(c.AggregateType(), c.AggregateID())
 	if err != nil {
-		return fmt.Errorf("failed to get events: %w", err)
+		return fmt.Errorf("failed to fetch events for aggregate: %w", err)
 	}
 
 	aggregateVersion := uint(0)
@@ -56,9 +58,19 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		aggregate.ApplyEvent(event.Data)
 	}
 
+	ctx = logging.WithLogger(
+		ctx,
+		logging.FromContext(ctx).With(
+			slog.Any("aggregate_type", c.AggregateType()),
+			slog.Any("aggregate_id", c.AggregateID()),
+			slog.Any("version", aggregateContext.Version()),
+			slog.String("command", fmt.Sprintf("%T", c)),
+		),
+	)
+
 	result, err := aggregate.HandleCommand(ctx, c)
 	if err != nil {
-		return fmt.Errorf("failed to handle command: %w", err)
+		return fmt.Errorf("aggregate failed to handle command: %w", err)
 	}
 
 	newEvents := utils.Map(result, func(i uint, event EventData) Event {

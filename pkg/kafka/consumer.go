@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/plugin/kslog"
@@ -39,7 +38,7 @@ func (c *Consumer) Consume(ctx context.Context, callback func(Record)) error {
 
 		fetches := c.client.PollFetches(ctx)
 		if fetches.IsClientClosed() {
-			return fmt.Errorf("Kafka client closed")
+			return fmt.Errorf("kafka client closed")
 		}
 
 		if fetches.Err() != nil {
@@ -52,8 +51,6 @@ func (c *Consumer) Consume(ctx context.Context, callback func(Record)) error {
 				Value: record.Value,
 			})
 		})
-
-		time.Sleep(1 * time.Second)
 	}
 }
 

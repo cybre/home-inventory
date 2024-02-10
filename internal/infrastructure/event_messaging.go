@@ -90,9 +90,13 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 			return
 		}
 
-		logger := logging.FromContext(ctx)
-		ctx = logging.WithLogger(ctx, logger.With(slog.String("event_handler", handler.Name()), slog.String("event_type", string(event.EventType))))
-
+		ctx = logging.WithLogger(
+			ctx,
+			logging.FromContext(ctx).With(
+				slog.String("event_handler", handler.Name()),
+				slog.Any("event_type", event.EventType),
+			),
+		)
 		if err := handler.HandleEvent(ctx, event.Data); err != nil {
 			c.logger.Error("failed to handle event", slog.Any("error", err))
 		}
