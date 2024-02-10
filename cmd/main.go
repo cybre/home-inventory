@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/cybre/home-inventory/internal/app/item"
@@ -19,6 +21,9 @@ var kafkaBrokers = []string{"127.0.0.1:9092"}
 const eventsTopic = "home-inventory.events"
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
 	domain.RegisterEvent(item.ItemAddedEvent{})
 	domain.RegisterEvent(item.ItemUpdatedEvent{})
@@ -41,7 +46,7 @@ func main() {
 
 	eventConsumer := infrastructure.NewKafkaEventConsumer(kafkaBrokers, eventsTopic)
 	eventConsumer.RegisterEventHandler(item.NewItemProjector())
-	if err := eventConsumer.Start(context.Background()); err != nil {
+	if err := eventConsumer.Start(ctx); err != nil {
 		panic(err)
 	}
 	defer eventConsumer.Stop()
@@ -50,7 +55,7 @@ func main() {
 
 	itemId := uuid.NewString()
 
-	if err := itemService.AddItem(context.Background(), item.AddItemCommandData{
+	if err := itemService.AddItem(ctx, item.AddItemCommandData{
 		ItemID: itemId,
 		Name:   "Test Item",
 	}); err != nil {
@@ -58,7 +63,7 @@ func main() {
 	}
 
 	time.AfterFunc(30*time.Second, func() {
-		if err := itemService.UpdateItem(context.Background(), item.UpdateItemCommandData{
+		if err := itemService.UpdateItem(ctx, item.UpdateItemCommandData{
 			ItemID: itemId,
 			Name:   "Test Item Updated",
 		}); err != nil {
@@ -66,7 +71,7 @@ func main() {
 		}
 	})
 
-	if err := httptransport.NewHTTPTransport(itemService); err != nil {
+	if err := httptransport.NewHTTPTransport(ctx, itemService); err != nil {
 		panic(err)
 	}
 }
