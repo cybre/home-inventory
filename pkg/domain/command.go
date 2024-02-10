@@ -58,7 +58,7 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		aggregate.ApplyEvent(event.Data)
 	}
 
-	ctx = logging.WithLogger(
+	aggCtx := logging.WithLogger(
 		ctx,
 		logging.FromContext(ctx).With(
 			slog.Any("aggregate_type", c.AggregateType()),
@@ -68,7 +68,7 @@ func (h *CommandBus) Dispatch(ctx context.Context, c Command) error {
 		),
 	)
 
-	result, err := aggregate.HandleCommand(ctx, c)
+	result, err := aggregate.HandleCommand(aggCtx, c)
 	if err != nil {
 		return fmt.Errorf("aggregate failed to handle command: %w", err)
 	}
