@@ -3,11 +3,13 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/plugin/kslog"
 )
 
 type Record struct {
@@ -19,13 +21,14 @@ type Producer struct {
 	client *kgo.Client
 }
 
-func NewProducer(brokers []string, topic string) (*Producer, error) {
+func NewProducer(brokers []string, topic string, logger *slog.Logger) (*Producer, error) {
 	producerId := strconv.FormatInt(int64(os.Getpid()), 10)
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
 		kgo.TransactionalID(producerId),
 		kgo.DefaultProduceTopic(topic),
 		kgo.AllowAutoTopicCreation(),
+		kgo.WithLogger(kslog.New(logger)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Kafka producer: %w", err)

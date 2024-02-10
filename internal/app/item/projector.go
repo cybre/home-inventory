@@ -2,9 +2,10 @@ package item
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/cybre/home-inventory/pkg/domain"
+	"github.com/cybre/home-inventory/pkg/logging"
 )
 
 type ItemProjector struct {
@@ -37,11 +38,13 @@ func (p ItemProjector) Name() string {
 }
 
 func (p ItemProjector) handleItemAddedEvent(ctx context.Context, e ItemAddedEvent) error {
-	fmt.Printf("item added: %#v\n", e)
+	logging.FromContext(ctx).Info("item added", slog.String("name", e.Name))
+
 	return nil
 }
 
 func (p ItemProjector) handleItemUpdatedEvent(ctx context.Context, e ItemUpdatedEvent) error {
-	fmt.Printf("item updated: %#v\n", e)
+	logging.FromContext(ctx).Info("item updated", slog.String("name", e.Name))
+
 	return nil
 }

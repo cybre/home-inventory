@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"time"
@@ -10,6 +10,7 @@ import (
 	"github.com/cybre/home-inventory/internal/app/item"
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
+	kafkatransport "github.com/cybre/home-inventory/internal/transport/kafka"
 	"github.com/cybre/home-inventory/pkg/cassandra"
 	"github.com/cybre/home-inventory/pkg/domain"
 	"github.com/cybre/home-inventory/pkg/kafka"
@@ -24,6 +25,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
 	domain.RegisterEvent(item.ItemAddedEvent{})
 	domain.RegisterEvent(item.ItemUpdatedEvent{})
@@ -34,42 +38,42 @@ func main() {
 	}
 	defer cassandraSession.Close()
 
-	kafkaProducer, err := kafka.NewProducer(kafkaBrokers, eventsTopic)
+	kafkaProducer, err := kafka.NewProducer(kafkaBrokers, eventsTopic, logger)
 	if err != nil {
 		panic(err)
 	}
 	defer kafkaProducer.Close()
 
-	eventPublisher := infrastructure.NewKafkaEventPublisher(kafkaProducer)
-	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
-	commandBus := domain.NewCommandBus(eventStore, eventPublisher)
-
-	eventConsumer := infrastructure.NewKafkaEventConsumer(kafkaBrokers, eventsTopic)
-	eventConsumer.RegisterEventHandler(item.NewItemProjector())
-	if err := eventConsumer.Start(ctx); err != nil {
+	eventMessaging, err := infrastructure.NewKafkaEventMessaging(kafkaBrokers, eventsTopic, logger)
+	if err != nil {
 		panic(err)
 	}
-	defer eventConsumer.Stop()
+	defer eventMessaging.Close()
+
+	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
+	commandBus := domain.NewCommandBus(eventStore, eventMessaging)
 
 	itemService := item.NewItemService(commandBus)
 
 	itemId := uuid.NewString()
-
 	if err := itemService.AddItem(ctx, item.AddItemCommandData{
 		ItemID: itemId,
 		Name:   "Test Item",
 	}); err != nil {
 		panic(err)
 	}
-
 	time.AfterFunc(30*time.Second, func() {
 		if err := itemService.UpdateItem(ctx, item.UpdateItemCommandData{
 			ItemID: itemId,
 			Name:   "Test Item Updated",
 		}); err != nil {
-			fmt.Println(err)
+			slog.Error("failed to update item", slog.Any("error", err))
 		}
 	})
+
+	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
+		panic(err)
+	}
 
 	if err := httptransport.NewHTTPTransport(ctx, itemService); err != nil {
 		panic(err)

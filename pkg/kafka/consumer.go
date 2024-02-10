@@ -3,19 +3,22 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/plugin/kslog"
 )
 
 type Consumer struct {
 	client *kgo.Client
 }
 
-func NewConsumer(brokers []string, topic, consumerGroup string) (*Consumer, error) {
+func NewConsumer(brokers []string, topic, consumerGroup string, logger *slog.Logger) (*Consumer, error) {
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
 		kgo.ConsumerGroup(consumerGroup),
+		kgo.WithLogger(kslog.New(logger)),
 		kgo.ConsumeTopics(topic),
 	)
 
