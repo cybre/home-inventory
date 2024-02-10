@@ -5,15 +5,13 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"time"
 
-	"github.com/cybre/home-inventory/internal/app/item"
+	item "github.com/cybre/home-inventory/internal/app/items"
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/internal/transport/kafka"
 	"github.com/cybre/home-inventory/pkg/cassandra"
 	"github.com/cybre/home-inventory/pkg/domain"
-	"github.com/google/uuid"
 )
 
 var kafkaBrokers = []string{"127.0.0.1:9092"}
@@ -47,22 +45,6 @@ func main() {
 	commandBus := domain.NewCommandBus(eventStore, eventMessaging)
 
 	itemService := item.NewItemService(commandBus)
-
-	itemId := uuid.NewString()
-	if err := itemService.AddItem(ctx, item.AddItemCommandData{
-		ItemID: itemId,
-		Name:   "Test Item",
-	}); err != nil {
-		panic(err)
-	}
-	time.AfterFunc(30*time.Second, func() {
-		if err := itemService.UpdateItem(ctx, item.UpdateItemCommandData{
-			ItemID: itemId,
-			Name:   "Test Item Updated",
-		}); err != nil {
-			slog.Error("failed to update item", slog.Any("error", err))
-		}
-	})
 
 	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
 		panic(err)

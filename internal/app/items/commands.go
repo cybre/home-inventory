@@ -1,4 +1,4 @@
-package item
+package items
 
 import "github.com/cybre/home-inventory/pkg/domain"
 
