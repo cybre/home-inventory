@@ -41,7 +41,6 @@ func main() {
 
 	eventConsumer := infrastructure.NewKafkaEventConsumer(kafkaBrokers, eventsTopic)
 	eventConsumer.RegisterEventHandler(item.NewItemProjector())
-	eventConsumer.RegisterEventHandler(item.NewItemProjector())
 	if err := eventConsumer.Start(context.Background()); err != nil {
 		panic(err)
 	}
