@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 )
 
@@ -14,6 +15,36 @@ type Event struct {
 	Data          EventData     `json:"event_data"`
 	Timestamp     int64         `json:"timestamp"`
 	Version       uint          `json:"version"`
+}
+
+func UnmarshalEvent(data []byte) (Event, error) {
+	var event map[string]interface{}
+	if err := json.Unmarshal(data, &event); err != nil {
+		return Event{}, fmt.Errorf("failed to unmarshal event: %w", err)
+	}
+
+	eventDataInstance, ok := GetEvent(EventType(event["event_type"].(string)))
+	if !ok {
+		return Event{}, ErrEventTypeNotFound
+	}
+
+	eventDataBytes, err := json.Marshal(event["event_data"])
+	if err != nil {
+		return Event{}, fmt.Errorf("failed to marshal event data: %w", err)
+	}
+
+	if err := json.Unmarshal(eventDataBytes, eventDataInstance); err != nil {
+		return Event{}, fmt.Errorf("failed to unmarshal event data: %w", err)
+	}
+
+	return Event{
+		AggregateType: AggregateType(event["aggregate_type"].(string)),
+		AggregateID:   AggregateID(event["aggregate_id"].(string)),
+		EventType:     EventType(event["event_type"].(string)),
+		Data:          reflect.ValueOf(eventDataInstance).Elem().Interface().(EventData),
+		Timestamp:     int64(event["timestamp"].(float64)),
+		Version:       uint(event["version"].(float64)),
+	}, nil
 }
 
 func (e Event) Marshal() ([]byte, error) {

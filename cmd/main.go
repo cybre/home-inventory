@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cybre/home-inventory/internal/app/item"
 	"github.com/cybre/home-inventory/internal/infrastructure"
@@ -11,6 +13,10 @@ import (
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
 	"github.com/cybre/home-inventory/pkg/domain"
 )
+
+var kafkaBrokers = []string{"127.0.0.1:9092"}
+
+const eventsTopic = "home-inventory.events"
 
 func main() {
 	domain.RegisterAggregateRoot(item.ItemAggregateType, item.NewItemAggregate)
@@ -23,7 +29,7 @@ func main() {
 	}
 	defer cassandraSession.Close()
 
-	kafkaProducer, err := kafka.NewProducer([]string{"127.0.0.1:9092"}, "home-inventory.events")
+	kafkaProducer, err := kafka.NewProducer(kafkaBrokers, eventsTopic)
 	if err != nil {
 		panic(err)
 	}
@@ -32,6 +38,14 @@ func main() {
 	eventPublisher := infrastructure.NewKafkaEventPublisher(kafkaProducer)
 	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
 	commandBus := domain.NewCommandBus(eventStore, eventPublisher)
+
+	eventConsumer := infrastructure.NewKafkaEventConsumer(kafkaBrokers, eventsTopic)
+	eventConsumer.RegisterEventHandler(item.NewItemProjector())
+	eventConsumer.RegisterEventHandler(item.NewItemProjector())
+	if err := eventConsumer.Start(context.Background()); err != nil {
+		panic(err)
+	}
+	defer eventConsumer.Stop()
 
 	itemService := item.NewItemService(commandBus)
 
@@ -48,6 +62,15 @@ func main() {
 	}); err != nil {
 		panic(err)
 	}
+
+	time.AfterFunc(30*time.Second, func() {
+		if err := itemService.UpdateItem(context.Background(), item.UpdateItemCommandData{
+			ItemID: "65396437-3930-3039-2d35-6132352d3433",
+			Name:   "Test Item 4",
+		}); err != nil {
+			fmt.Println(err)
+		}
+	})
 
 	httpTransport := httptransport.NewHTTPTransport(itemService)
 	http.ListenAndServe(":3000", httpTransport)

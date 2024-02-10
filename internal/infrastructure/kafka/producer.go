@@ -56,6 +56,8 @@ func (p *Producer) Produce(ctx context.Context, records ...Record) error {
 		if err := p.client.EndTransaction(ctx, kgo.TryAbort); err != nil {
 			return fmt.Errorf("unable to abort transaction: %v", err)
 		}
+	default:
+		return fmt.Errorf("unable to end transaction: %v", err)
 	}
 
 	return nil
