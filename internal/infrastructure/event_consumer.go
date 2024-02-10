@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/cybre/home-inventory/internal/infrastructure/kafka"
 	"github.com/cybre/home-inventory/pkg/domain"
+	"github.com/cybre/home-inventory/pkg/kafka"
 )
 
 type EventHandler interface {

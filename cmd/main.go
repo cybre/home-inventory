@@ -3,15 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/cybre/home-inventory/internal/app/item"
 	"github.com/cybre/home-inventory/internal/infrastructure"
-	"github.com/cybre/home-inventory/internal/infrastructure/cassandra"
-	"github.com/cybre/home-inventory/internal/infrastructure/kafka"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
+	"github.com/cybre/home-inventory/pkg/cassandra"
 	"github.com/cybre/home-inventory/pkg/domain"
+	"github.com/cybre/home-inventory/pkg/kafka"
+	"github.com/google/uuid"
 )
 
 var kafkaBrokers = []string{"127.0.0.1:9092"}
@@ -48,29 +48,25 @@ func main() {
 
 	itemService := item.NewItemService(commandBus)
 
-	// if err := itemService.AddItem(context.Background(), app.AddItemCommandData{
-	// 	ItemID: "65396437-3930-3039-2d35-6132352d3433",
-	// 	Name:   "Test Item",
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	itemId := uuid.NewString()
 
-	if err := itemService.UpdateItem(context.Background(), item.UpdateItemCommandData{
-		ItemID: "65396437-3930-3039-2d35-6132352d3433",
-		Name:   "Test Item 3",
+	if err := itemService.AddItem(context.Background(), item.AddItemCommandData{
+		ItemID: itemId,
+		Name:   "Test Item",
 	}); err != nil {
 		panic(err)
 	}
 
 	time.AfterFunc(30*time.Second, func() {
 		if err := itemService.UpdateItem(context.Background(), item.UpdateItemCommandData{
-			ItemID: "65396437-3930-3039-2d35-6132352d3433",
-			Name:   "Test Item 4",
+			ItemID: itemId,
+			Name:   "Test Item Updated",
 		}); err != nil {
 			fmt.Println(err)
 		}
 	})
 
-	httpTransport := httptransport.NewHTTPTransport(itemService)
-	http.ListenAndServe(":3000", httpTransport)
+	if err := httptransport.NewHTTPTransport(itemService); err != nil {
+		panic(err)
+	}
 }

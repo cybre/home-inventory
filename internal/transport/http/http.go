@@ -12,9 +12,9 @@ type ItemService interface {
 	AddItem(context.Context, item.AddItemCommandData) error
 }
 
-func NewHTTPTransport(itemService ItemService) http.Handler {
+func NewHTTPTransport(itemService ItemService) error {
 	router := chi.NewRouter()
 	buildItemRoutes(router, itemService)
 
-	return router
+	return http.ListenAndServe(":8080", router)
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cybre/home-inventory/internal/infrastructure/kafka"
 	"github.com/cybre/home-inventory/pkg/domain"
+	"github.com/cybre/home-inventory/pkg/kafka"
 	"github.com/cybre/home-inventory/pkg/utils"
 )
 
