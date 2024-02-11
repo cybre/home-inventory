@@ -6,17 +6,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cybre/home-inventory/internal/app/inventory/item"
+	"github.com/cybre/home-inventory/internal/shared"
 	"github.com/go-chi/chi/v5"
 )
 
-type ItemService interface {
-	AddItem(context.Context, item.AddItemCommandData) error
+type HouseholdService interface {
+	CreateHousehold(context.Context, shared.CreateHouseholdCommandData) error
+	AddRoom(context.Context, shared.AddRoomCommandData) error
+	AddItem(context.Context, shared.AddItemCommandData) error
+	UpdateItem(context.Context, shared.UpdateItemCommandData) error
 }
 
-func NewHTTPTransport(ctx context.Context, itemService ItemService) error {
+func NewHTTPTransport(ctx context.Context, householdService HouseholdService) error {
 	router := chi.NewRouter()
-	buildItemRoutes(router, itemService)
+	buildHouseholdRoutes(router, householdService)
 
 	server := &http.Server{Addr: ":8080", Handler: router}
 

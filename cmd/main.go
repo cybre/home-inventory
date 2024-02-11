@@ -6,9 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/cybre/home-inventory/internal/app/inventory"
-	"github.com/cybre/home-inventory/internal/app/inventory/item"
-	"github.com/cybre/home-inventory/internal/app/shared"
+	"github.com/cybre/home-inventory/internal/app/household"
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	httptransport "github.com/cybre/home-inventory/internal/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/internal/transport/kafka"
@@ -27,9 +25,9 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	domain.RegisterAggregateRoot(shared.InventoryAggregateType, inventory.NewInventoryAggregate)
-	domain.RegisterEvent(item.ItemAddedEvent{})
-	domain.RegisterEvent(item.ItemUpdatedEvent{})
+	domain.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate)
+	domain.RegisterEvent(household.ItemAddedEvent{})
+	domain.RegisterEvent(household.ItemUpdatedEvent{})
 
 	cassandraSession, err := cassandra.NewSession([]string{"127.0.0.1:9042"}, "home_inventory")
 	if err != nil {
@@ -46,13 +44,13 @@ func main() {
 	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
 	commandBus := domain.NewCommandBus(eventStore, eventMessaging)
 
-	itemService := item.NewItemService(commandBus)
+	householdService := household.NewHouseholdService(commandBus)
 
 	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
 		panic(err)
 	}
 
-	if err := httptransport.NewHTTPTransport(ctx, itemService); err != nil {
+	if err := httptransport.NewHTTPTransport(ctx, householdService); err != nil {
 		panic(err)
 	}
 }

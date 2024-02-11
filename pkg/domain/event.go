@@ -9,10 +9,10 @@ import (
 type EventType string
 
 type Event struct {
-	AggregateType AggregateType `json:"aggregate_type"`
-	AggregateID   AggregateID   `json:"aggregate_id"`
-	EventType     EventType     `json:"event_type"`
-	Data          EventData     `json:"event_data"`
+	AggregateType AggregateType `json:"aggregateType"`
+	AggregateID   AggregateID   `json:"aggregateId"`
+	EventType     EventType     `json:"eventType"`
+	Data          EventData     `json:"eventData"`
 	Timestamp     int64         `json:"timestamp"`
 	Version       uint          `json:"version"`
 }
@@ -23,12 +23,12 @@ func UnmarshalEvent(data []byte) (Event, error) {
 		return Event{}, fmt.Errorf("failed to decode event: %w", err)
 	}
 
-	eventDataInstance, ok := GetEvent(EventType(event["event_type"].(string)))
+	eventDataInstance, ok := GetEvent(EventType(event["eventType"].(string)))
 	if !ok {
 		return Event{}, ErrEventTypeNotFound
 	}
 
-	eventDataBytes, err := json.Marshal(event["event_data"])
+	eventDataBytes, err := json.Marshal(event["eventData"])
 	if err != nil {
 		return Event{}, fmt.Errorf("failed to marshal event data: %w", err)
 	}
@@ -38,9 +38,9 @@ func UnmarshalEvent(data []byte) (Event, error) {
 	}
 
 	return Event{
-		AggregateType: AggregateType(event["aggregate_type"].(string)),
-		AggregateID:   AggregateID(event["aggregate_id"].(string)),
-		EventType:     EventType(event["event_type"].(string)),
+		AggregateType: AggregateType(event["aggregateType"].(string)),
+		AggregateID:   AggregateID(event["aggregateId"].(string)),
+		EventType:     EventType(event["eventType"].(string)),
 		Data:          reflect.ValueOf(eventDataInstance).Elem().Interface().(EventData),
 		Timestamp:     int64(event["timestamp"].(float64)),
 		Version:       uint(event["version"].(float64)),

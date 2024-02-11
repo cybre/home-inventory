@@ -8,6 +8,10 @@ func (id AggregateID) Marshal() []byte {
 	return []byte(id)
 }
 
+func (id AggregateID) String() string {
+	return string(id)
+}
+
 type AggregateType string
 
 // AggregateRoot represents the interface that all aggregates in the system should implement.
