@@ -10,6 +10,7 @@ type UserCreatedEvent struct {
 	ID        string `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
 }
 
 func (e UserCreatedEvent) EventType() domain.EventType {

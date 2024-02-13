@@ -8,6 +8,7 @@ type CreateUserCommand struct {
 	UserID    string
 	FirstName string
 	LastName  string
+	Email     string
 }
 
 func (c CreateUserCommand) AggregateType() domain.AggregateType {

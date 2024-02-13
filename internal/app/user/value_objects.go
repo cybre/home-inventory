@@ -1,6 +1,9 @@
 package user
 
-import "fmt"
+import (
+	"fmt"
+	"net/mail"
+)
 
 const (
 	MinFirstNameLength = 1
@@ -36,4 +39,18 @@ func NewLastName(lastName string) (LastName, error) {
 
 func (n LastName) String() string {
 	return string(n)
+}
+
+type Email string
+
+func NewEmail(email string) (Email, error) {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return "", fmt.Errorf("invalid email format: %s", email)
+	}
+
+	return Email(email), nil
+}
+
+func (e Email) String() string {
+	return string(e)
 }

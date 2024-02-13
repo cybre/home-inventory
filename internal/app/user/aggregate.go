@@ -19,6 +19,7 @@ type UserAggregate struct {
 	ID        c.UserID
 	FirstName FirstName
 	LastName  LastName
+	Email     Email
 }
 
 func NewHouseholdAggregate(aggregateContext domain.AggregateContext) domain.AggregateRoot {
@@ -65,10 +66,16 @@ func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command Cre
 		return nil, err
 	}
 
+	email, err := NewEmail(command.Email)
+	if err != nil {
+		return nil, err
+	}
+
 	return c.Events(UserCreatedEvent{
 		ID:        userId.String(),
 		FirstName: firstName.String(),
 		LastName:  lastName.String(),
+		Email:     email.String(),
 	})
 }
 
