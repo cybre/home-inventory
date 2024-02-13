@@ -1,24 +1,24 @@
-package household
+package app
 
 import (
 	"context"
 
-	"github.com/cybre/home-inventory/internal/app/common"
-	"github.com/cybre/home-inventory/internal/shared"
+	"github.com/cybre/home-inventory/inventory/domain/household"
+	"github.com/cybre/home-inventory/inventory/shared"
 )
 
 type HouseholdService struct {
-	CommandBus common.CommandBus
+	CommandBus CommandBus
 }
 
-func NewHouseholdService(commandBus common.CommandBus) *HouseholdService {
+func NewHouseholdService(commandBus CommandBus) *HouseholdService {
 	return &HouseholdService{
 		CommandBus: commandBus,
 	}
 }
 
 func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.CreateHouseholdCommandData) error {
-	return s.CommandBus.Dispatch(ctx, CreateHouseholdCommand{
+	return s.CommandBus.Dispatch(ctx, household.CreateHouseholdCommand{
 		HouseholdID: data.HouseholdID,
 		UserID:      data.UserID,
 		Name:        data.Name,
@@ -26,7 +26,7 @@ func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.Creat
 }
 
 func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomCommandData) error {
-	return s.CommandBus.Dispatch(ctx, AddRoomCommand{
+	return s.CommandBus.Dispatch(ctx, household.AddRoomCommand{
 		HouseholdID: data.HouseholdID,
 		RoomID:      data.RoomID,
 		Name:        data.Name,
@@ -34,7 +34,7 @@ func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomComman
 }
 
 func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemCommandData) error {
-	return s.CommandBus.Dispatch(ctx, AddItemCommand{
+	return s.CommandBus.Dispatch(ctx, household.AddItemCommand{
 		ItemID:   data.ItemID,
 		Name:     data.Name,
 		Barcode:  data.Barcode,
@@ -43,7 +43,7 @@ func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemComman
 }
 
 func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItemCommandData) error {
-	return s.CommandBus.Dispatch(ctx, UpdateItemCommand{
+	return s.CommandBus.Dispatch(ctx, household.UpdateItemCommand{
 		ItemID:   data.ItemID,
 		Name:     data.Name,
 		Barcode:  data.Barcode,

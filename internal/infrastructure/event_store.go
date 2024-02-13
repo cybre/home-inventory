@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cybre/home-inventory/pkg/domain"
+	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 	"github.com/gocql/gocql"
 )
 
@@ -20,8 +20,8 @@ func NewCassandraEventStore(session *gocql.Session) *CassandraEventStore {
 	}
 }
 
-func (es *CassandraEventStore) StoreEvents(ctx context.Context, events []domain.Event) error {
-	batch := es.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
+func (ces *CassandraEventStore) StoreEvents(ctx context.Context, events []es.Event) error {
+	batch := ces.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
 	for _, event := range events {
 		eventData, err := json.Marshal(event.Data)
 		if err != nil {
@@ -44,22 +44,22 @@ func (es *CassandraEventStore) StoreEvents(ctx context.Context, events []domain.
 		)
 	}
 
-	return es.session.ExecuteBatch(batch)
+	return ces.session.ExecuteBatch(batch)
 }
 
-func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, aggregateID domain.AggregateID) ([]domain.Event, error) {
+func (ces *CassandraEventStore) GetEvents(aggregateType es.AggregateType, aggregateID es.AggregateID) ([]es.Event, error) {
 	aggregateUUID, err := gocql.ParseUUID(string(aggregateID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse aggregate id: %w", err)
 	}
 
-	scanner := es.session.Query(
+	scanner := ces.session.Query(
 		"SELECT event_type, event_data, timestamp, version FROM event_store WHERE aggregate_type = ? AND aggregate_id = ?",
 		aggregateType,
 		aggregateUUID,
 	).Iter().Scanner()
 
-	events := []domain.Event{}
+	events := []es.Event{}
 	for scanner.Next() {
 		var (
 			eventType string
@@ -72,21 +72,21 @@ func (es *CassandraEventStore) GetEvents(aggregateType domain.AggregateType, agg
 			return nil, fmt.Errorf("failed to scan event: %w", err)
 		}
 
-		eventDataInstance, ok := domain.GetEvent(domain.EventType(eventType))
+		eventDataInstance, ok := es.GetEvent(es.EventType(eventType))
 		if !ok {
-			return nil, domain.ErrEventTypeNotFound
+			return nil, es.ErrEventTypeNotFound
 		}
 
 		if err := json.Unmarshal(eventData, eventDataInstance); err != nil {
 			return nil, fmt.Errorf("failed to decode event data: %w", err)
 		}
 
-		eventDataInstanceValue := reflect.ValueOf(eventDataInstance).Elem().Interface().(domain.EventData)
+		eventDataInstanceValue := reflect.ValueOf(eventDataInstance).Elem().Interface().(es.EventData)
 
-		events = append(events, domain.Event{
+		events = append(events, es.Event{
 			AggregateType: aggregateType,
 			AggregateID:   aggregateID,
-			EventType:     domain.EventType(eventType),
+			EventType:     es.EventType(eventType),
 			Data:          eventDataInstanceValue,
 			Timestamp:     timestamp,
 			Version:       version,

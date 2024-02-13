@@ -4,30 +4,30 @@ import (
 	"context"
 	"fmt"
 
-	c "github.com/cybre/home-inventory/internal/app/common"
-	"github.com/cybre/home-inventory/pkg/domain"
+	c "github.com/cybre/home-inventory/inventory/domain/common"
+	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 )
 
 const (
-	HouseholdAggregateType  domain.AggregateType = "HouseholdAggregate"
-	initialAggregateVersion                      = 0
+	HouseholdAggregateType  es.AggregateType = "HouseholdAggregate"
+	initialAggregateVersion                  = 0
 )
 
 type HouseholdAgregate struct {
-	domain.AggregateContext
+	es.AggregateContext
 
 	UserID c.UserID
 	Name   HouseholdName
 	Rooms  Rooms
 }
 
-func NewHouseholdAggregate(aggregateContext domain.AggregateContext) domain.AggregateRoot {
+func NewHouseholdAggregate(aggregateContext es.AggregateContext) es.AggregateRoot {
 	return &HouseholdAgregate{
 		AggregateContext: aggregateContext,
 	}
 }
 
-func (a *HouseholdAgregate) ApplyEvent(event domain.EventData) {
+func (a *HouseholdAgregate) ApplyEvent(event es.EventData) {
 	switch e := event.(type) {
 	case HouseholdCreatedEvent:
 		a.applyHouseholdCreatedEvent(e)
@@ -42,7 +42,7 @@ func (a *HouseholdAgregate) ApplyEvent(event domain.EventData) {
 	}
 }
 
-func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command domain.Command) ([]domain.EventData, error) {
+func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Command) ([]es.EventData, error) {
 	switch c := command.(type) {
 	case CreateHouseholdCommand:
 		return a.handleCreateHouseholdCommand(ctx, c)
@@ -53,11 +53,11 @@ func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command domain.Co
 	case UpdateItemCommand:
 		return a.handleUpdateItemCommand(ctx, c)
 	default:
-		return nil, domain.ErrUnknownCommand
+		return nil, es.ErrUnknownCommand
 	}
 }
 
-func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, command CreateHouseholdCommand) ([]domain.EventData, error) {
+func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, command CreateHouseholdCommand) ([]es.EventData, error) {
 	if a.Version() != initialAggregateVersion {
 		return nil, fmt.Errorf("household with provided ID already exists: %s", command.HouseholdID)
 	}
@@ -79,7 +79,7 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 	})
 }
 
-func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command AddRoomCommand) ([]domain.EventData, error) {
+func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command AddRoomCommand) ([]es.EventData, error) {
 	if a.Version() == initialAggregateVersion {
 		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
 	}
@@ -100,7 +100,7 @@ func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command Ad
 	})
 }
 
-func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command AddItemCommand) ([]domain.EventData, error) {
+func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command AddItemCommand) ([]es.EventData, error) {
 	if a.Version() == initialAggregateVersion {
 		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
 	}
@@ -134,7 +134,7 @@ func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command Ad
 	})
 }
 
-func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command UpdateItemCommand) ([]domain.EventData, error) {
+func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command UpdateItemCommand) ([]es.EventData, error) {
 	if a.Version() == initialAggregateVersion {
 		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
 	}

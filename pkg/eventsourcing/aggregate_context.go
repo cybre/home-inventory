@@ -1,4 +1,4 @@
-package domain
+package eventsourcing
 
 type AggregateContext struct {
 	aggregateType AggregateType

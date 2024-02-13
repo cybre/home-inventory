@@ -1,24 +1,24 @@
-package user
+package app
 
 import (
 	"context"
 
-	"github.com/cybre/home-inventory/internal/app/common"
-	"github.com/cybre/home-inventory/internal/shared"
+	"github.com/cybre/home-inventory/inventory/domain/user"
+	"github.com/cybre/home-inventory/inventory/shared"
 )
 
 type UserService struct {
-	commandBus common.CommandBus
+	commandBus CommandBus
 }
 
-func NewUserService(commandBus common.CommandBus) *UserService {
+func NewUserService(commandBus CommandBus) *UserService {
 	return &UserService{
 		commandBus: commandBus,
 	}
 }
 
 func (s UserService) CreateUser(ctx context.Context, data shared.CreateUserCommandData) error {
-	return s.commandBus.Dispatch(ctx, CreateUserCommand{
+	return s.commandBus.Dispatch(ctx, user.CreateUserCommand{
 		UserID:    data.UserID,
 		FirstName: data.FirstName,
 		LastName:  data.LastName,

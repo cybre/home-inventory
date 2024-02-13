@@ -1,9 +1,9 @@
 package user
 
-import "github.com/cybre/home-inventory/pkg/domain"
+import es "github.com/cybre/home-inventory/pkg/eventsourcing"
 
 const (
-	EventTypeUserCreated domain.EventType = "UserCreatedEvent"
+	EventTypeUserCreated es.EventType = "UserCreatedEvent"
 )
 
 type UserCreatedEvent struct {
@@ -13,6 +13,6 @@ type UserCreatedEvent struct {
 	Email     string `json:"email"`
 }
 
-func (e UserCreatedEvent) EventType() domain.EventType {
+func (e UserCreatedEvent) EventType() es.EventType {
 	return EventTypeUserCreated
 }

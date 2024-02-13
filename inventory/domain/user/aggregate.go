@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	c "github.com/cybre/home-inventory/internal/app/common"
-	"github.com/cybre/home-inventory/pkg/domain"
+	c "github.com/cybre/home-inventory/inventory/domain/common"
+	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 )
 
 const (
-	UserAggregateType       domain.AggregateType = "UserAggregate"
-	initialAggregateVersion                      = 0
+	UserAggregateType       es.AggregateType = "UserAggregate"
+	initialAggregateVersion                  = 0
 )
 
 type UserAggregate struct {
-	domain.AggregateContext
+	es.AggregateContext
 
 	ID        c.UserID
 	FirstName FirstName
@@ -22,13 +22,13 @@ type UserAggregate struct {
 	Email     Email
 }
 
-func NewHouseholdAggregate(aggregateContext domain.AggregateContext) domain.AggregateRoot {
+func NewHouseholdAggregate(aggregateContext es.AggregateContext) es.AggregateRoot {
 	return &UserAggregate{
 		AggregateContext: aggregateContext,
 	}
 }
 
-func (a *UserAggregate) ApplyEvent(event domain.EventData) {
+func (a *UserAggregate) ApplyEvent(event es.EventData) {
 	switch e := event.(type) {
 	case UserCreatedEvent:
 		a.applyUserCreatedEvent(e)
@@ -37,16 +37,16 @@ func (a *UserAggregate) ApplyEvent(event domain.EventData) {
 	}
 }
 
-func (a *UserAggregate) HandleCommand(ctx context.Context, command domain.Command) ([]domain.EventData, error) {
+func (a *UserAggregate) HandleCommand(ctx context.Context, command es.Command) ([]es.EventData, error) {
 	switch c := command.(type) {
 	case CreateUserCommand:
 		return a.handleCreateUserCommand(ctx, c)
 	default:
-		return nil, domain.ErrUnknownCommand
+		return nil, es.ErrUnknownCommand
 	}
 }
 
-func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command CreateUserCommand) ([]domain.EventData, error) {
+func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command CreateUserCommand) ([]es.EventData, error) {
 	if a.Version() != initialAggregateVersion {
 		return nil, fmt.Errorf("user with provided ID already exists: %s", command.UserID)
 	}

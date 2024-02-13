@@ -6,15 +6,15 @@ import (
 	"log/slog"
 	"slices"
 
-	"github.com/cybre/home-inventory/pkg/domain"
+	"github.com/cybre/home-inventory/pkg/eventsourcing"
 	"github.com/cybre/home-inventory/pkg/kafka"
 	"github.com/cybre/home-inventory/pkg/logging"
 	"github.com/cybre/home-inventory/pkg/utils"
 )
 
 type EventHandler interface {
-	HandleEvent(ctx context.Context, event domain.EventData) error
-	Events() []domain.EventType
+	HandleEvent(ctx context.Context, event eventsourcing.EventData) error
+	Events() []eventsourcing.EventType
 	Name() string
 }
 
@@ -43,8 +43,8 @@ func NewKafkaEventMessaging(brokers []string, topic string, logger *slog.Logger)
 	}, nil
 }
 
-func (p *KafkaEventMessaging) PublishEvents(ctx context.Context, events []domain.Event) error {
-	records, err := utils.MapWithError(events, func(i uint, event domain.Event) (kafka.Record, error) {
+func (p *KafkaEventMessaging) PublishEvents(ctx context.Context, events []eventsourcing.Event) error {
+	records, err := utils.MapWithError(events, func(i uint, event eventsourcing.Event) (kafka.Record, error) {
 		eventBytes, err := event.Marshal()
 		if err != nil {
 			return kafka.Record{}, fmt.Errorf("failed to marshal event: %w", err)
@@ -80,7 +80,7 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 	c.consumers = append(c.consumers, kafkaConsumer)
 
 	go kafkaConsumer.Consume(ctx, func(record kafka.Record) {
-		event, err := domain.UnmarshalEvent(record.Value)
+		event, err := eventsourcing.UnmarshalEvent(record.Value)
 		if err != nil {
 			c.logger.Error("failed to unmarshal event", slog.Any("error", err))
 			return

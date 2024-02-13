@@ -1,12 +1,12 @@
 package household
 
-import "github.com/cybre/home-inventory/pkg/domain"
+import es "github.com/cybre/home-inventory/pkg/eventsourcing"
 
 const (
-	EventTypeHouseholdCreated domain.EventType = "HouseholdCreatedEvent"
-	EventTypeRoomAdded        domain.EventType = "RoomAddedEvent"
-	EventTypeItemAdded        domain.EventType = "ItemAddedEvent"
-	EventTypeItemUpdated      domain.EventType = "ItemUpdatedEvent"
+	EventTypeHouseholdCreated es.EventType = "HouseholdCreatedEvent"
+	EventTypeRoomAdded        es.EventType = "RoomAddedEvent"
+	EventTypeItemAdded        es.EventType = "ItemAddedEvent"
+	EventTypeItemUpdated      es.EventType = "ItemUpdatedEvent"
 )
 
 type HouseholdCreatedEvent struct {
@@ -15,7 +15,7 @@ type HouseholdCreatedEvent struct {
 	Name        string `json:"name"`
 }
 
-func (e HouseholdCreatedEvent) EventType() domain.EventType {
+func (e HouseholdCreatedEvent) EventType() es.EventType {
 	return EventTypeHouseholdCreated
 }
 
@@ -25,7 +25,7 @@ type RoomAddedEvent struct {
 	Name        string `json:"name"`
 }
 
-func (e RoomAddedEvent) EventType() domain.EventType {
+func (e RoomAddedEvent) EventType() es.EventType {
 	return EventTypeRoomAdded
 }
 
@@ -38,7 +38,7 @@ type ItemAddedEvent struct {
 	Quantity    uint   `json:"quantity"`
 }
 
-func (e ItemAddedEvent) EventType() domain.EventType {
+func (e ItemAddedEvent) EventType() es.EventType {
 	return EventTypeItemAdded
 }
 
@@ -51,6 +51,6 @@ type ItemUpdatedEvent struct {
 	Quantity    uint   `json:"quantity"`
 }
 
-func (e ItemUpdatedEvent) EventType() domain.EventType {
+func (e ItemUpdatedEvent) EventType() es.EventType {
 	return EventTypeItemUpdated
 }

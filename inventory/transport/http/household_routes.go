@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cybre/home-inventory/internal/shared"
+	"github.com/cybre/home-inventory/inventory/shared"
 	"github.com/go-chi/chi/v5"
 )
 
