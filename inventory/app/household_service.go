@@ -35,18 +35,22 @@ func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomComman
 
 func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemCommandData) error {
 	return s.CommandBus.Dispatch(ctx, household.AddItemCommand{
-		ItemID:   data.ItemID,
-		Name:     data.Name,
-		Barcode:  data.Barcode,
-		Quantity: data.Quantity,
+		HouseholdID: data.HouseholdID,
+		RoomID:      data.RoomID,
+		ItemID:      data.ItemID,
+		Name:        data.Name,
+		Barcode:     data.Barcode,
+		Quantity:    data.Quantity,
 	})
 }
 
 func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItemCommandData) error {
 	return s.CommandBus.Dispatch(ctx, household.UpdateItemCommand{
-		ItemID:   data.ItemID,
-		Name:     data.Name,
-		Barcode:  data.Barcode,
-		Quantity: data.Quantity,
+		HouseholdID: data.HouseholdID,
+		RoomID:      data.RoomID,
+		ItemID:      data.ItemID,
+		Name:        data.Name,
+		Barcode:     data.Barcode,
+		Quantity:    data.Quantity,
 	})
 }
