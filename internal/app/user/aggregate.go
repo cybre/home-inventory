@@ -72,7 +72,7 @@ func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command Cre
 	}
 
 	return c.Events(UserCreatedEvent{
-		ID:        userId.String(),
+		UserID:    userId.String(),
 		FirstName: firstName.String(),
 		LastName:  lastName.String(),
 		Email:     email.String(),
@@ -80,7 +80,7 @@ func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command Cre
 }
 
 func (a *UserAggregate) applyUserCreatedEvent(event UserCreatedEvent) {
-	a.ID, _ = c.NewUserID(event.ID)
+	a.ID, _ = c.NewUserID(event.UserID)
 	a.FirstName, _ = NewFirstName(event.FirstName)
 	a.LastName, _ = NewLastName(event.LastName)
 }

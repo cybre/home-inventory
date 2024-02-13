@@ -7,7 +7,7 @@ const (
 )
 
 type UserCreatedEvent struct {
-	ID        string `json:"id"`
+	UserID    string `json:"userId"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
