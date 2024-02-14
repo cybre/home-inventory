@@ -19,7 +19,6 @@ type EventHandler interface {
 }
 
 type KafkaEventMessaging struct {
-	logger        *slog.Logger
 	producer      *kafka.Producer
 	brokers       []string
 	topic         string
@@ -28,13 +27,12 @@ type KafkaEventMessaging struct {
 }
 
 func NewKafkaEventMessaging(brokers []string, topic string, logger *slog.Logger) (*KafkaEventMessaging, error) {
-	producer, err := kafka.NewProducer(brokers, topic, logger)
+	producer, err := kafka.NewProducer(brokers, topic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kafka producer: %w", err)
 	}
 
 	return &KafkaEventMessaging{
-		logger:        logger,
 		producer:      producer,
 		brokers:       brokers,
 		topic:         topic,
@@ -71,7 +69,6 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 		c.brokers,
 		c.topic,
 		handler.Name(),
-		c.logger,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create kafka consumer: %w", err)
@@ -82,7 +79,7 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 	go kafkaConsumer.Consume(ctx, func(record kafka.Record) {
 		event, err := eventsourcing.UnmarshalEvent(record.Value)
 		if err != nil {
-			c.logger.Error("failed to unmarshal event", slog.Any("error", err))
+			logging.FromContext(ctx).Error("failed to unmarshal event", slog.Any("error", err))
 			return
 		}
 
@@ -98,7 +95,7 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 			),
 		)
 		if err := handler.HandleEvent(handlerContext, event.Data); err != nil {
-			c.logger.Error("failed to handle event", slog.Any("error", err))
+			logging.FromContext(ctx).Error("failed to handle event", slog.Any("error", err))
 		}
 	})
 

@@ -16,6 +16,7 @@ import (
 	kafkatransport "github.com/cybre/home-inventory/inventory/transport/kafka"
 	"github.com/cybre/home-inventory/pkg/cassandra"
 	es "github.com/cybre/home-inventory/pkg/eventsourcing"
+	"github.com/cybre/home-inventory/pkg/logging"
 	// "github.com/google/uuid"
 )
 
@@ -27,8 +28,10 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With("service", "inventory")
 	slog.SetDefault(logger)
+
+	ctx = logging.WithLogger(ctx, logger)
 
 	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate)
 	es.RegisterEvent(household.HouseholdCreatedEvent{})
