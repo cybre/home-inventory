@@ -1,84 +1,75 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/cybre/home-inventory/inventory/shared"
-	"github.com/go-chi/chi/v5"
+	"github.com/labstack/echo/v4"
 )
 
-func buildHouseholdRoutes(router chi.Router, householdService HouseholdService) {
-	router.Post("/household", createHouseholdHandler(householdService))
-	router.Post("/household/{id}/rooms", addHouseholdRoomHandler(householdService))
-	router.Post("/household/{id}/rooms/{roomID}/items", addItemHandler(householdService))
-	router.Put("/household/{id}/rooms/{roomID}/items/{itemID}", updateItemHandler(householdService))
+func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService) {
+	e.POST("/household", createHouseholdHandler(householdService))
+	e.POST("/household/:householdId/rooms", addHouseholdRoomHandler(householdService))
+	e.POST("/household/:householdId/rooms/:roomID/items", addItemHandler(householdService))
+	e.POST("/household/:householdId/rooms/:roomID/items/:itemID", updateItemHandler(householdService))
 }
 
-func createHouseholdHandler(householdService HouseholdService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func createHouseholdHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		var data shared.CreateHouseholdCommandData
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		if err := c.Bind(&data); err != nil {
+			return err
 		}
 
-		if err := householdService.CreateHousehold(r.Context(), data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if err := householdService.CreateHousehold(c.Request().Context(), data); err != nil {
+			return err
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 
-func addHouseholdRoomHandler(householdService HouseholdService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func addHouseholdRoomHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		var data shared.AddRoomCommandData
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		if err := c.Bind(&data); err != nil {
+			return err
 		}
 
-		if err := householdService.AddRoom(r.Context(), data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if err := householdService.AddRoom(c.Request().Context(), data); err != nil {
+			return err
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 
-func addItemHandler(householdService HouseholdService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func addItemHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		var data shared.AddItemCommandData
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		if err := c.Bind(&data); err != nil {
+			return err
 		}
 
-		if err := householdService.AddItem(r.Context(), data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if err := householdService.AddItem(c.Request().Context(), data); err != nil {
+			return err
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 
-func updateItemHandler(householdService HouseholdService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func updateItemHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		var data shared.UpdateItemCommandData
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		if err := c.Bind(&data); err != nil {
+			return err
 		}
 
-		if err := householdService.UpdateItem(r.Context(), data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if err := householdService.UpdateItem(c.Request().Context(), data); err != nil {
+			return err
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		return c.NoContent(http.StatusNoContent)
 	}
 }

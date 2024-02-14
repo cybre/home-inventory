@@ -7,14 +7,14 @@ type CreateHouseholdCommandData struct {
 }
 
 type AddRoomCommandData struct {
-	HouseholdID string `json:"householdId"`
+	HouseholdID string `param:"householdId"`
 	RoomID      string `json:"roomId"`
 	Name        string `json:"name"`
 }
 
 type AddItemCommandData struct {
-	HouseholdID string `json:"householdId"`
-	RoomID      string `json:"roomId"`
+	HouseholdID string `param:"householdId"`
+	RoomID      string `param:"roomId"`
 	ItemID      string `json:"itemId"`
 	Name        string `json:"name"`
 	Barcode     string `json:"barcode"`
@@ -22,9 +22,9 @@ type AddItemCommandData struct {
 }
 
 type UpdateItemCommandData struct {
-	HouseholdID string `json:"householdId"`
-	RoomID      string `json:"roomId"`
-	ItemID      string `json:"itemId"`
+	HouseholdID string `param:"householdId"`
+	RoomID      string `param:"roomId"`
+	ItemID      string `param:"itemId"`
 	Name        string `json:"name"`
 	Barcode     string `json:"barcode"`
 	Quantity    uint   `json:"quantity"`

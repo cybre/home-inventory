@@ -35,6 +35,8 @@ func main() {
 	es.RegisterEvent(household.RoomAddedEvent{})
 	es.RegisterEvent(household.ItemAddedEvent{})
 	es.RegisterEvent(household.ItemUpdatedEvent{})
+
+	es.RegisterAggregateRoot(user.UserAggregateType, user.NewHouseholdAggregate)
 	es.RegisterEvent(user.UserCreatedEvent{})
 
 	cassandraSession, err := cassandra.NewSession([]string{"127.0.0.1:9042"}, "home_inventory")

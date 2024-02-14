@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cybre/home-inventory/inventory/shared"
-	"github.com/go-chi/chi/v5"
+	"github.com/labstack/echo/v4"
 )
 
 type HouseholdService interface {
@@ -18,13 +18,11 @@ type HouseholdService interface {
 }
 
 func NewHTTPTransport(ctx context.Context, householdService HouseholdService) error {
-	router := chi.NewRouter()
-	buildHouseholdRoutes(router, householdService)
-
-	server := &http.Server{Addr: ":8080", Handler: router}
+	e := echo.New()
+	buildHouseholdRoutes(e, householdService)
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := e.Start(":8080"); err != nil {
 			if err == http.ErrServerClosed {
 				return
 			}
@@ -37,7 +35,7 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService) er
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
+	if err := e.Shutdown(ctx); err != nil {
 		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 
