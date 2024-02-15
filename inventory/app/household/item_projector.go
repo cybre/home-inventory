@@ -1,4 +1,4 @@
-package app
+package household
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func (p ItemProjector) Events() []es.EventType {
 }
 
 func (p ItemProjector) Name() string {
-	return "item.Projector"
+	return "household.ItemProjector"
 }
 
 func (p ItemProjector) handleItemAddedEvent(ctx context.Context, e household.ItemAddedEvent) error {

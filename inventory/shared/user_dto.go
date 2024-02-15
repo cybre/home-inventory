@@ -6,3 +6,7 @@ type CreateUserCommandData struct {
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
 }
+
+type GenerateOneTimeTokenCommandData struct {
+	Email string `json:"email"`
+}

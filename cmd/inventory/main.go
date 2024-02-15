@@ -8,17 +8,17 @@ import (
 	"strings"
 
 	"github.com/cybre/home-inventory/internal/infrastructure"
-	"github.com/cybre/home-inventory/inventory/app"
+	apphousehold "github.com/cybre/home-inventory/inventory/app/household"
+	appuser "github.com/cybre/home-inventory/inventory/app/user"
 	"github.com/cybre/home-inventory/inventory/domain/household"
 	"github.com/cybre/home-inventory/inventory/domain/user"
+	userservices "github.com/cybre/home-inventory/inventory/domain/user/services"
 
-	"github.com/cybre/home-inventory/inventory/shared"
 	httptransport "github.com/cybre/home-inventory/inventory/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/inventory/transport/kafka"
 	"github.com/cybre/home-inventory/pkg/cassandra"
 	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 	"github.com/cybre/home-inventory/pkg/logging"
-	"github.com/google/uuid"
 )
 
 var (
@@ -40,20 +40,26 @@ func main() {
 
 	ctx = logging.WithLogger(ctx, logger)
 
+	cassandraSession, err := cassandra.NewSession(cassandraHosts, serviceName)
+	if err != nil {
+		panic(err)
+	}
+	defer cassandraSession.Close()
+
+	loginInfoRepository := appuser.NewLoginInfoRepository(cassandraSession)
+	oneTimeLoginRepository := appuser.NewOneTimeLoginRepository(cassandraSession)
+
+	emailUniquenessService := userservices.NewEmailUniquenessService(loginInfoRepository)
+
 	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate)
 	es.RegisterEvent(household.HouseholdCreatedEvent{})
 	es.RegisterEvent(household.RoomAddedEvent{})
 	es.RegisterEvent(household.ItemAddedEvent{})
 	es.RegisterEvent(household.ItemUpdatedEvent{})
 
-	es.RegisterAggregateRoot(user.UserAggregateType, user.NewHouseholdAggregate)
+	es.RegisterAggregateRoot(user.UserAggregateType, user.NewUserAggregate(emailUniquenessService))
 	es.RegisterEvent(user.UserCreatedEvent{})
-
-	cassandraSession, err := cassandra.NewSession(cassandraHosts, serviceName)
-	if err != nil {
-		panic(err)
-	}
-	defer cassandraSession.Close()
+	es.RegisterEvent(user.UserOneTimeTokenGeneratedEvent{})
 
 	eventMessaging, err := infrastructure.NewKafkaEventMessaging(kafkaBrokers, eventsTopic, logger)
 	if err != nil {
@@ -67,43 +73,75 @@ func main() {
 	}
 	commandBus := es.NewCommandBus(eventStore, eventMessaging)
 
-	householdService := app.NewHouseholdService(commandBus)
+	householdService := apphousehold.NewHouseholdService(commandBus)
+	// userService := appuser.NewUserService(commandBus, loginInfoRepository)
 
-	householdId := uuid.NewString()
-	userId := uuid.NewString()
-
-	if err := householdService.CreateHousehold(ctx, shared.CreateHouseholdCommandData{
-		HouseholdID: householdId,
-		UserID:      userId,
-		Name:        "Test Household",
-	}); err != nil {
+	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging, loginInfoRepository, oneTimeLoginRepository); err != nil {
 		panic(err)
 	}
 
-	roomId := uuid.NewString()
+	// time.Sleep(5 * time.Second)
 
-	if err := householdService.AddRoom(ctx, shared.AddRoomCommandData{
-		HouseholdID: householdId,
-		RoomID:      roomId,
-		Name:        "Test Room",
-	}); err != nil {
-		panic(err)
-	}
+	// userId := uuid.NewString()
 
-	if err := householdService.AddItem(ctx, shared.AddItemCommandData{
-		HouseholdID: householdId,
-		RoomID:      roomId,
-		ItemID:      uuid.NewString(),
-		Name:        "Test Item",
-		Barcode:     "1234567890",
-		Quantity:    1,
-	}); err != nil {
-		panic(err)
-	}
+	// if err := userService.CreateUser(ctx, shared.CreateUserCommandData{
+	// 	UserID:    userId,
+	// 	FirstName: "Stefan",
+	// 	LastName:  "Ric",
+	// 	Email:     "stfric369@gmail.com",
+	// }); err != nil {
+	// 	panic(err)
+	// }
 
-	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
-		panic(err)
-	}
+	// if err := userService.GenerateOneTimeToken(ctx, shared.GenerateOneTimeTokenCommandData{
+	// 	Email: "stfric369@gmail.com",
+	// }); err != nil {
+	// 	panic(err)
+	// }
+
+	// householdId := uuid.NewString()
+
+	// if err := householdService.CreateHousehold(ctx, shared.CreateHouseholdCommandData{
+	// 	HouseholdID: householdId,
+	// 	UserID:      userId,
+	// 	Name:        "Test Household",
+	// }); err != nil {
+	// 	panic(err)
+	// }
+
+	// roomId := uuid.NewString()
+
+	// if err := householdService.AddRoom(ctx, shared.AddRoomCommandData{
+	// 	HouseholdID: householdId,
+	// 	RoomID:      roomId,
+	// 	Name:        "Test Room",
+	// }); err != nil {
+	// 	panic(err)
+	// }
+
+	// itemId := uuid.NewString()
+
+	// if err := householdService.AddItem(ctx, shared.AddItemCommandData{
+	// 	HouseholdID: householdId,
+	// 	RoomID:      roomId,
+	// 	ItemID:      itemId,
+	// 	Name:        "Test Item 123",
+	// 	Barcode:     "1234567890",
+	// 	Quantity:    1,
+	// }); err != nil {
+	// 	panic(err)
+	// }
+
+	// if err := householdService.UpdateItem(ctx, shared.UpdateItemCommandData{
+	// 	HouseholdID: householdId,
+	// 	RoomID:      roomId,
+	// 	ItemID:      itemId,
+	// 	Name:        "Test Item 1234",
+	// 	Barcode:     "1234567890",
+	// 	Quantity:    1,
+	// }); err != nil {
+	// 	panic(err)
+	// }
 
 	if err := httptransport.NewHTTPTransport(ctx, householdService); err != nil {
 		panic(err)

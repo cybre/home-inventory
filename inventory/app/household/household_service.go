@@ -1,17 +1,18 @@
-package app
+package household
 
 import (
 	"context"
 
+	"github.com/cybre/home-inventory/inventory/app/common"
 	"github.com/cybre/home-inventory/inventory/domain/household"
 	"github.com/cybre/home-inventory/inventory/shared"
 )
 
 type HouseholdService struct {
-	CommandBus CommandBus
+	CommandBus common.CommandBus
 }
 
-func NewHouseholdService(commandBus CommandBus) *HouseholdService {
+func NewHouseholdService(commandBus common.CommandBus) *HouseholdService {
 	return &HouseholdService{
 		CommandBus: commandBus,
 	}

@@ -1,15 +1,22 @@
-version: '2'
+version: '3.8'
 
 services:
   cassandra:
-    image: "cassandra:latest"
+    image: cassandra:latest
+    restart: on-failure:10
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
     healthcheck:
       test: ["CMD-SHELL", "nodetool status | grep 'UN'"]
       interval: 30s
       timeout: 10s
       retries: 5
+
   kafka:
-    image: 'bitnami/kafka:latest'
+    image: bitnami/kafka:latest
+    restart: on-failure:10
     environment:
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
@@ -17,16 +24,21 @@ services:
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    volumes:
+      - kafka_data:/bitnami
     healthcheck:
       test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
       interval: 30s
       timeout: 10s
       retries: 5
+
   inventory:
     image: home-inventory/inventory
+    restart: on-failure:10
     environment:
       - KAFKA_BROKERS=kafka:9092
       - CASSANDRA_HOSTS=cassandra:9042
+      - REDIS_HOST=redis:6379
     depends_on:
       cassandra:
         condition: service_healthy
@@ -35,3 +47,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.inventory
+
+volumes:
+  cassandra_data:
+    driver: local
+  redis_data:
+    driver: local
+  kafka_data:
+    driver: local

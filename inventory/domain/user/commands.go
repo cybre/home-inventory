@@ -16,3 +16,15 @@ func (c CreateUserCommand) AggregateType() es.AggregateType {
 func (c CreateUserCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.UserID)
 }
+
+type GenerateOneTimeTokenCommand struct {
+	UserID string
+}
+
+func (c GenerateOneTimeTokenCommand) AggregateType() es.AggregateType {
+	return UserAggregateType
+}
+
+func (c GenerateOneTimeTokenCommand) AggregateID() es.AggregateID {
+	return es.AggregateID(c.UserID)
+}
