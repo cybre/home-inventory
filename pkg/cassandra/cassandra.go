@@ -10,6 +10,8 @@ import (
 )
 
 func NewSession(hosts []string, keyspace string) (*gocql.Session, error) {
+	createKeyspace(hosts)
+
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Keyspace = keyspace
 
@@ -37,4 +39,21 @@ func NewSession(hosts []string, keyspace string) (*gocql.Session, error) {
 	}
 
 	return session, nil
+}
+
+func createKeyspace(hosts []string) error {
+	cluster := gocql.NewCluster(hosts...)
+	cluster.Keyspace = "system"
+
+	session, err := cluster.CreateSession()
+	if err != nil {
+		return fmt.Errorf("failed to create session: %w", err)
+	}
+	defer session.Close()
+
+	if err := session.Query("CREATE KEYSPACE IF NOT EXISTS home_inventory WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}").Exec(); err != nil {
+		return fmt.Errorf("failed to create keyspace: %w", err)
+	}
+
+	return nil
 }

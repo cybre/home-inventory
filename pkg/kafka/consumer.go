@@ -16,8 +16,8 @@ func NewConsumer(brokers []string, topic, consumerGroup string) (*Consumer, erro
 		kgo.SeedBrokers(brokers...),
 		kgo.ConsumerGroup(consumerGroup),
 		kgo.ConsumeTopics(topic),
+		kgo.RequireStableFetchOffsets(),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Kafka consumer: %w", err)
 	}

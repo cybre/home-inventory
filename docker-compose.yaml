@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  cassandra:
+    image: "cassandra:latest"
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep 'UN'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  kafka:
+    image: 'bitnami/kafka:latest'
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  inventory:
+    image: home-inventory/inventory
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - CASSANDRA_HOSTS=cassandra:9042
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Dockerfile.inventory

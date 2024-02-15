@@ -77,9 +77,11 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 	c.consumers = append(c.consumers, kafkaConsumer)
 
 	go kafkaConsumer.Consume(ctx, func(record kafka.Record) {
+		logger := logging.FromContext(ctx)
+
 		event, err := eventsourcing.UnmarshalEvent(record.Value)
 		if err != nil {
-			logging.FromContext(ctx).Error("failed to unmarshal event", slog.Any("error", err))
+			logger.Error("failed to unmarshal event", slog.Any("error", err))
 			return
 		}
 
@@ -87,15 +89,17 @@ func (c *KafkaEventMessaging) ConsumeEvents(ctx context.Context, handler EventHa
 			return
 		}
 
+		handlerLogger := logger.With(
+			slog.String("event_handler", handler.Name()),
+			slog.Any("event_type", event.EventType),
+		)
+
 		handlerContext := logging.WithLogger(
 			ctx,
-			logging.FromContext(ctx).With(
-				slog.String("event_handler", handler.Name()),
-				slog.Any("event_type", event.EventType),
-			),
+			handlerLogger,
 		)
 		if err := handler.HandleEvent(handlerContext, event.Data); err != nil {
-			logging.FromContext(ctx).Error("failed to handle event", slog.Any("error", err))
+			handlerLogger.Error("failed to handle event", slog.Any("error", err))
 		}
 	})
 
