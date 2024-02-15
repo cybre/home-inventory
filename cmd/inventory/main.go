@@ -21,16 +21,21 @@ import (
 	"github.com/google/uuid"
 )
 
-var kafkaBrokers = strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
-var cassandraHosts = strings.Split(os.Getenv("CASSANDRA_HOSTS"), ",")
+var (
+	kafkaBrokers   = strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	cassandraHosts = strings.Split(os.Getenv("CASSANDRA_HOSTS"), ",")
+)
 
-const eventsTopic = "home-inventory.events"
+const (
+	eventsTopic = "inventory.events"
+	serviceName = "inventory"
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With("service", "inventory")
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil)).With("service", serviceName)
 	slog.SetDefault(logger)
 
 	ctx = logging.WithLogger(ctx, logger)
@@ -44,7 +49,7 @@ func main() {
 	es.RegisterAggregateRoot(user.UserAggregateType, user.NewHouseholdAggregate)
 	es.RegisterEvent(user.UserCreatedEvent{})
 
-	cassandraSession, err := cassandra.NewSession(cassandraHosts, "home_inventory")
+	cassandraSession, err := cassandra.NewSession(cassandraHosts, serviceName)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +61,10 @@ func main() {
 	}
 	defer eventMessaging.Close()
 
-	eventStore := infrastructure.NewCassandraEventStore(cassandraSession)
+	eventStore, err := infrastructure.NewCassandraEventStore(cassandraSession)
+	if err != nil {
+		panic(err)
+	}
 	commandBus := es.NewCommandBus(eventStore, eventMessaging)
 
 	householdService := app.NewHouseholdService(commandBus)

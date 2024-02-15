@@ -1,7 +1,9 @@
 package cassandra
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/gocql/gocql"
 	"github.com/golang-migrate/migrate/v4"
@@ -10,7 +12,9 @@ import (
 )
 
 func NewSession(hosts []string, keyspace string) (*gocql.Session, error) {
-	createKeyspace(hosts)
+	if err := createKeyspace(hosts, keyspace); err != nil {
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
 
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Keyspace = keyspace
@@ -30,18 +34,25 @@ func NewSession(hosts []string, keyspace string) (*gocql.Session, error) {
 		return nil, fmt.Errorf("failed to create database instance for migrations: %w", err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "cassandra", databaseInstance)
+	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file://migrations/%s", keyspace), "cassandra", databaseInstance)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return session, nil
+		}
+
 		return nil, fmt.Errorf("failed to create migrations: %w", err)
 	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return nil, fmt.Errorf("failed to run migrations: %w", err)
+
+	if err := m.Up(); err != nil {
+		if !errors.Is(err, migrate.ErrNoChange) {
+			return nil, fmt.Errorf("failed to run migrations: %w", err)
+		}
 	}
 
 	return session, nil
 }
 
-func createKeyspace(hosts []string) error {
+func createKeyspace(hosts []string, keyspace string) error {
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Keyspace = "system"
 
@@ -51,7 +62,7 @@ func createKeyspace(hosts []string) error {
 	}
 	defer session.Close()
 
-	if err := session.Query("CREATE KEYSPACE IF NOT EXISTS home_inventory WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}").Exec(); err != nil {
+	if err := session.Query(fmt.Sprintf("CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}", keyspace)).Exec(); err != nil {
 		return fmt.Errorf("failed to create keyspace: %w", err)
 	}
 

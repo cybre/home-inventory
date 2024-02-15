@@ -14,10 +14,14 @@ type CassandraEventStore struct {
 	session *gocql.Session
 }
 
-func NewCassandraEventStore(session *gocql.Session) *CassandraEventStore {
-	return &CassandraEventStore{
+func NewCassandraEventStore(session *gocql.Session) (*CassandraEventStore, error) {
+	eventStore := &CassandraEventStore{
 		session: session,
 	}
+
+	eventStore.init()
+
+	return eventStore, nil
 }
 
 func (ces *CassandraEventStore) StoreEvents(ctx context.Context, events []es.Event) error {
@@ -94,4 +98,22 @@ func (ces *CassandraEventStore) GetEvents(aggregateType es.AggregateType, aggreg
 	}
 
 	return events, nil
+}
+
+func (ces *CassandraEventStore) init() error {
+	if err := ces.session.Query(
+		`CREATE TABLE IF NOT EXISTS event_store (
+			aggregate_type text,
+			aggregate_id uuid,
+			event_type text,
+			event_data text,
+			timestamp timestamp,
+			version int,
+			PRIMARY KEY ((aggregate_type, aggregate_id), version)
+		) WITH CLUSTERING ORDER BY (version ASC)`,
+	).Exec(); err != nil {
+		return fmt.Errorf("failed to create event_store table: %w", err)
+	}
+
+	return nil
 }
