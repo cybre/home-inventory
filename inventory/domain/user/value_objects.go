@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	MinFirstNameLength = 1
+	MinFirstNameLength = 2
 	MaxFirstNameLength = 50
 
-	MinLastNameLength = 1
+	MinLastNameLength = 2
 	MaxLastNameLength = 50
 )
 

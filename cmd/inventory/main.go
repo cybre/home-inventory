@@ -74,7 +74,7 @@ func main() {
 	commandBus := es.NewCommandBus(eventStore, eventMessaging)
 
 	householdService := apphousehold.NewHouseholdService(commandBus)
-	// userService := appuser.NewUserService(commandBus, loginInfoRepository)
+	userService := appuser.NewUserService(commandBus, loginInfoRepository)
 
 	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging, loginInfoRepository, oneTimeLoginRepository); err != nil {
 		panic(err)
@@ -143,7 +143,7 @@ func main() {
 	// 	panic(err)
 	// }
 
-	if err := httptransport.NewHTTPTransport(ctx, householdService); err != nil {
+	if err := httptransport.NewHTTPTransport(ctx, householdService, userService); err != nil {
 		panic(err)
 	}
 }

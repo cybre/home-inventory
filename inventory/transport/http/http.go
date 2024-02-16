@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/cybre/home-inventory/inventory/shared"
 	"github.com/cybre/home-inventory/pkg/logging"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -21,10 +24,49 @@ type HouseholdService interface {
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error
 }
 
-func NewHTTPTransport(ctx context.Context, householdService HouseholdService) error {
+type UserService interface {
+	GenerateOneTimeToken(context.Context, shared.GenerateOneTimeTokenCommandData) error
+	CreateUser(context.Context, shared.CreateUserCommandData) error
+}
+
+type InputHandler[T any] func(echo.Context, T) error
+
+func validatedHandler[T any](f func(echo.Context, T) error, validate *validator.Validate) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var data T
+		if err := c.Bind(&data); err != nil {
+			return err
+		}
+
+		if err := validate.Struct(data); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		return f(c, data)
+	}
+}
+
+func NewHTTPTransport(ctx context.Context, householdService HouseholdService, userService UserService) error {
 	e := echo.New()
 
 	logger := logging.FromContext(ctx)
+
+	validate := validator.New()
+
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		for _, tag := range []string{"json", "form", "query", "param"} {
+			name := strings.SplitN(fld.Tag.Get(tag), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+
+			if name != "" {
+				return name
+			}
+		}
+
+		return fld.Name
+	})
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -66,7 +108,8 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService) er
 		},
 	}))
 
-	buildHouseholdRoutes(e, householdService)
+	buildHouseholdRoutes(e, householdService, validate)
+	buildUserRoutes(e, userService, validate)
 
 	go func() {
 		if err := e.Start(":8080"); err != nil {
