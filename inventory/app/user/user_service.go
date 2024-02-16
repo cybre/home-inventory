@@ -13,15 +13,21 @@ type UserIDRepository interface {
 	GetUserIDByEmail(ctx context.Context, email string) (string, error)
 }
 
+type TokenVerifier interface {
+	VerifyToken(ctx context.Context, token string) (string, error)
+}
+
 type UserService struct {
 	commandBus       common.CommandBus
 	userIdRepository UserIDRepository
+	tokenVerifier    TokenVerifier
 }
 
-func NewUserService(commandBus common.CommandBus, userIdRepository UserIDRepository) *UserService {
+func NewUserService(commandBus common.CommandBus, userIdRepository UserIDRepository, tokenVerifier TokenVerifier) *UserService {
 	return &UserService{
 		commandBus:       commandBus,
 		userIdRepository: userIdRepository,
+		tokenVerifier:    tokenVerifier,
 	}
 }
 
@@ -34,13 +40,26 @@ func (s UserService) CreateUser(ctx context.Context, data shared.CreateUserComma
 	})
 }
 
-func (s UserService) GenerateOneTimeToken(ctx context.Context, data shared.GenerateOneTimeTokenCommandData) error {
+func (s UserService) GenerateLoginToken(ctx context.Context, data shared.GenerateLoginTokenCommandData) error {
 	userId, err := s.userIdRepository.GetUserIDByEmail(ctx, data.Email)
 	if err != nil {
 		return fmt.Errorf("failed to get user id by email: %w", err)
 	}
 
-	return s.commandBus.Dispatch(ctx, user.GenerateOneTimeTokenCommand{
+	return s.commandBus.Dispatch(ctx, user.GenerateLoginTokenCommand{
 		UserID: userId,
+	})
+}
+
+func (s UserService) LoginViaToken(ctx context.Context, data shared.LoginViaTokenCommandData) error {
+	userId, err := s.tokenVerifier.VerifyToken(ctx, data.Token)
+	if err != nil {
+		return fmt.Errorf("failed to get user id by token: %w", err)
+	}
+
+	return s.commandBus.Dispatch(ctx, user.LoginCommand{
+		UserID:    userId,
+		UserAgent: data.UserAgent,
+		IP:        data.IP,
 	})
 }

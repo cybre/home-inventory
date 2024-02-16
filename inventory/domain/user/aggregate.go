@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 
 	c "github.com/cybre/home-inventory/inventory/domain/common"
 	es "github.com/cybre/home-inventory/pkg/eventsourcing"
@@ -27,6 +28,8 @@ type UserAggregate struct {
 	FirstName FirstName
 	LastName  LastName
 	Email     Email
+
+	LastLogin LastLogin
 }
 
 func NewUserAggregate(emailUniquenessService EmailUniquenessService) es.AggregateRootFactoryFunc {
@@ -42,8 +45,10 @@ func (a *UserAggregate) ApplyEvent(event es.EventData) {
 	switch e := event.(type) {
 	case UserCreatedEvent:
 		a.applyUserCreatedEvent(e)
-	case UserOneTimeTokenGeneratedEvent:
+	case UserLoginTokenGeneratedEvent:
 		// no-op
+	case UserLoginEvent:
+		a.applyUserLoginEvent(e)
 	default:
 		panic("unknown event type")
 	}
@@ -53,8 +58,10 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, command es.Command) (
 	switch c := command.(type) {
 	case CreateUserCommand:
 		return a.handleCreateUserCommand(ctx, c)
-	case GenerateOneTimeTokenCommand:
-		return a.handleGenerateOneTimeTokenCommand(ctx, c)
+	case GenerateLoginTokenCommand:
+		return a.handleGenerateLoginTokenCommand(ctx, c)
+	case LoginCommand:
+		return a.handleLoginCommand(ctx, c)
 	default:
 		return nil, es.ErrUnknownCommand
 	}
@@ -99,15 +106,33 @@ func (a *UserAggregate) handleCreateUserCommand(ctx context.Context, command Cre
 	})
 }
 
-func (a *UserAggregate) handleGenerateOneTimeTokenCommand(ctx context.Context, command GenerateOneTimeTokenCommand) ([]es.EventData, error) {
+func (a *UserAggregate) handleGenerateLoginTokenCommand(ctx context.Context, command GenerateLoginTokenCommand) ([]es.EventData, error) {
 	if a.Version() == initialAggregateVersion {
 		return nil, fmt.Errorf("user with provided ID does not exists: %s", command.UserID)
 	}
 
-	return c.Events(UserOneTimeTokenGeneratedEvent{
+	return c.Events(UserLoginTokenGeneratedEvent{
 		UserID: a.ID.String(),
 		Email:  a.Email.String(),
 		Token:  uuid.NewString(),
+	})
+}
+
+func (a *UserAggregate) handleLoginCommand(ctx context.Context, command LoginCommand) ([]es.EventData, error) {
+	if a.Version() == initialAggregateVersion {
+		return nil, fmt.Errorf("user with provided ID does not exists: %s", command.UserID)
+	}
+
+	loginItem, err := NewLastLogin(time.Now().Unix(), command.UserAgent, command.IP)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Events(UserLoginEvent{
+		UserID:    a.ID.String(),
+		Timestamp: loginItem.Time.Unix(),
+		UserAgent: loginItem.UserAgent.String(),
+		IP:        loginItem.IP.String(),
 	})
 }
 
@@ -116,4 +141,8 @@ func (a *UserAggregate) applyUserCreatedEvent(event UserCreatedEvent) {
 	a.FirstName, _ = NewFirstName(event.FirstName)
 	a.LastName, _ = NewLastName(event.LastName)
 	a.Email, _ = NewEmail(event.Email)
+}
+
+func (a *UserAggregate) applyUserLoginEvent(event UserLoginEvent) {
+	a.LastLogin, _ = NewLastLogin(event.Timestamp, event.UserAgent, event.IP)
 }

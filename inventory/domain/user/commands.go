@@ -17,14 +17,28 @@ func (c CreateUserCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.UserID)
 }
 
-type GenerateOneTimeTokenCommand struct {
+type GenerateLoginTokenCommand struct {
 	UserID string
 }
 
-func (c GenerateOneTimeTokenCommand) AggregateType() es.AggregateType {
+func (c GenerateLoginTokenCommand) AggregateType() es.AggregateType {
 	return UserAggregateType
 }
 
-func (c GenerateOneTimeTokenCommand) AggregateID() es.AggregateID {
+func (c GenerateLoginTokenCommand) AggregateID() es.AggregateID {
+	return es.AggregateID(c.UserID)
+}
+
+type LoginCommand struct {
+	UserID    string
+	UserAgent string
+	IP        string
+}
+
+func (c LoginCommand) AggregateType() es.AggregateType {
+	return UserAggregateType
+}
+
+func (c LoginCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.UserID)
 }

@@ -25,25 +25,9 @@ type HouseholdService interface {
 }
 
 type UserService interface {
-	GenerateOneTimeToken(context.Context, shared.GenerateOneTimeTokenCommandData) error
+	GenerateLoginToken(context.Context, shared.GenerateLoginTokenCommandData) error
 	CreateUser(context.Context, shared.CreateUserCommandData) error
-}
-
-type InputHandler[T any] func(echo.Context, T) error
-
-func validatedHandler[T any](f func(echo.Context, T) error, validate *validator.Validate) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var data T
-		if err := c.Bind(&data); err != nil {
-			return err
-		}
-
-		if err := validate.Struct(data); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-		}
-
-		return f(c, data)
-	}
+	LoginViaToken(context.Context, shared.LoginViaTokenCommandData) error
 }
 
 func NewHTTPTransport(ctx context.Context, householdService HouseholdService, userService UserService) error {
@@ -52,7 +36,6 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService, us
 	logger := logging.FromContext(ctx)
 
 	validate := validator.New()
-
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		for _, tag := range []string{"json", "form", "query", "param"} {
 			name := strings.SplitN(fld.Tag.Get(tag), ",", 2)[0]

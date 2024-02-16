@@ -7,6 +7,12 @@ type CreateUserCommandData struct {
 	Email     string `json:"email" validate:"required,email"`
 }
 
-type GenerateOneTimeTokenCommandData struct {
+type GenerateLoginTokenCommandData struct {
 	Email string `json:"email" validate:"required,email"`
+}
+
+type LoginViaTokenCommandData struct {
+	Token     string `param:"token" validate:"required"`
+	UserAgent string `validate:"required"`
+	IP        string `validate:"required"`
 }

@@ -4,18 +4,19 @@ import (
 	"net/http"
 
 	"github.com/cybre/home-inventory/inventory/shared"
+	eh "github.com/cybre/home-inventory/pkg/echohandler"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
 func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService, validate *validator.Validate) {
-	e.POST("/household", validatedHandler(createHouseholdHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms", validatedHandler(addHouseholdRoomHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms/:roomID/items", validatedHandler(addItemHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms/:roomID/items/:itemID", validatedHandler(updateItemHandler(householdService), validate))
+	e.POST("/household", eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
+	e.POST("/household/:householdId/rooms", eh.NewValidateHandler(addHouseholdRoomHandler(householdService), validate))
+	e.POST("/household/:householdId/rooms/:roomID/items", eh.NewValidateHandler(addItemHandler(householdService), validate))
+	e.POST("/household/:householdId/rooms/:roomID/items/:itemID", eh.NewValidateHandler(updateItemHandler(householdService), validate))
 }
 
-func createHouseholdHandler(householdService HouseholdService) InputHandler[shared.CreateHouseholdCommandData] {
+func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared.CreateHouseholdCommandData] {
 	return func(c echo.Context, data shared.CreateHouseholdCommandData) error {
 		if err := householdService.CreateHousehold(c.Request().Context(), data); err != nil {
 			return err
@@ -25,7 +26,7 @@ func createHouseholdHandler(householdService HouseholdService) InputHandler[shar
 	}
 }
 
-func addHouseholdRoomHandler(householdService HouseholdService) InputHandler[shared.AddRoomCommandData] {
+func addHouseholdRoomHandler(householdService HouseholdService) eh.Handler[shared.AddRoomCommandData] {
 	return func(c echo.Context, data shared.AddRoomCommandData) error {
 		if err := householdService.AddRoom(c.Request().Context(), data); err != nil {
 			return err
@@ -35,7 +36,7 @@ func addHouseholdRoomHandler(householdService HouseholdService) InputHandler[sha
 	}
 }
 
-func addItemHandler(householdService HouseholdService) InputHandler[shared.AddItemCommandData] {
+func addItemHandler(householdService HouseholdService) eh.Handler[shared.AddItemCommandData] {
 	return func(c echo.Context, data shared.AddItemCommandData) error {
 		if err := householdService.AddItem(c.Request().Context(), data); err != nil {
 			return err
@@ -45,7 +46,7 @@ func addItemHandler(householdService HouseholdService) InputHandler[shared.AddIt
 	}
 }
 
-func updateItemHandler(householdService HouseholdService) InputHandler[shared.UpdateItemCommandData] {
+func updateItemHandler(householdService HouseholdService) eh.Handler[shared.UpdateItemCommandData] {
 	return func(c echo.Context, data shared.UpdateItemCommandData) error {
 		if err := householdService.UpdateItem(c.Request().Context(), data); err != nil {
 			return err

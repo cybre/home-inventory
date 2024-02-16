@@ -8,15 +8,15 @@ import (
 	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 )
 
-type LoginInfoInsertRepository interface {
+type LoginInfoInserter interface {
 	Insert(ctx context.Context, email, userID string) error
 }
 
 type LoginInfoProjector struct {
-	repository LoginInfoInsertRepository
+	repository LoginInfoInserter
 }
 
-func NewLoginInfoProjector(repository LoginInfoInsertRepository) *LoginInfoProjector {
+func NewLoginInfoProjector(repository LoginInfoInserter) *LoginInfoProjector {
 	return &LoginInfoProjector{
 		repository: repository,
 	}

@@ -6,20 +6,20 @@ import (
 	"github.com/cybre/home-inventory/inventory/domain/user"
 )
 
-type EmailUniquenessRepository interface {
+type EmailUniquenessChecker interface {
 	IsUniqueEmail(ctx context.Context, email string) (bool, error)
 }
 
 type EmailUniquenessService struct {
-	emailUniquenessRepository EmailUniquenessRepository
+	emailUniquenessChecker EmailUniquenessChecker
 }
 
-func NewEmailUniquenessService(emailUniquenessRepository EmailUniquenessRepository) *EmailUniquenessService {
+func NewEmailUniquenessService(emailUniquenessRepository EmailUniquenessChecker) *EmailUniquenessService {
 	return &EmailUniquenessService{
-		emailUniquenessRepository: emailUniquenessRepository,
+		emailUniquenessChecker: emailUniquenessRepository,
 	}
 }
 
 func (s *EmailUniquenessService) IsUnique(ctx context.Context, email user.Email) (bool, error) {
-	return s.emailUniquenessRepository.IsUniqueEmail(ctx, email.String())
+	return s.emailUniquenessChecker.IsUniqueEmail(ctx, email.String())
 }
