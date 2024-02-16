@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	apphousehold "github.com/cybre/home-inventory/inventory/app/household"
@@ -13,6 +14,8 @@ import (
 	"github.com/cybre/home-inventory/inventory/domain/household"
 	"github.com/cybre/home-inventory/inventory/domain/user"
 	userservices "github.com/cybre/home-inventory/inventory/domain/user/services"
+	"github.com/cybre/home-inventory/inventory/shared"
+	"github.com/google/uuid"
 
 	httptransport "github.com/cybre/home-inventory/inventory/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/inventory/transport/kafka"
@@ -80,9 +83,9 @@ func main() {
 		panic(err)
 	}
 
-	// time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	// userId := uuid.NewString()
+	userId := uuid.NewString()
 
 	// if err := userService.CreateUser(ctx, shared.CreateUserCommandData{
 	// 	UserID:    userId,
@@ -93,55 +96,55 @@ func main() {
 	// 	panic(err)
 	// }
 
-	// if err := userService.GenerateOneTimeToken(ctx, shared.GenerateOneTimeTokenCommandData{
-	// 	Email: "stfric369@gmail.com",
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	if err := userService.GenerateOneTimeToken(ctx, shared.GenerateOneTimeTokenCommandData{
+		Email: "stfric369@gmail.com",
+	}); err != nil {
+		panic(err)
+	}
 
-	// householdId := uuid.NewString()
+	householdId := uuid.NewString()
 
-	// if err := householdService.CreateHousehold(ctx, shared.CreateHouseholdCommandData{
-	// 	HouseholdID: householdId,
-	// 	UserID:      userId,
-	// 	Name:        "Test Household",
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	if err := householdService.CreateHousehold(ctx, shared.CreateHouseholdCommandData{
+		HouseholdID: householdId,
+		UserID:      userId,
+		Name:        "Test Household",
+	}); err != nil {
+		panic(err)
+	}
 
-	// roomId := uuid.NewString()
+	roomId := uuid.NewString()
 
-	// if err := householdService.AddRoom(ctx, shared.AddRoomCommandData{
-	// 	HouseholdID: householdId,
-	// 	RoomID:      roomId,
-	// 	Name:        "Test Room",
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	if err := householdService.AddRoom(ctx, shared.AddRoomCommandData{
+		HouseholdID: householdId,
+		RoomID:      roomId,
+		Name:        "Test Room",
+	}); err != nil {
+		panic(err)
+	}
 
-	// itemId := uuid.NewString()
+	itemId := uuid.NewString()
 
-	// if err := householdService.AddItem(ctx, shared.AddItemCommandData{
-	// 	HouseholdID: householdId,
-	// 	RoomID:      roomId,
-	// 	ItemID:      itemId,
-	// 	Name:        "Test Item 123",
-	// 	Barcode:     "1234567890",
-	// 	Quantity:    1,
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	if err := householdService.AddItem(ctx, shared.AddItemCommandData{
+		HouseholdID: householdId,
+		RoomID:      roomId,
+		ItemID:      itemId,
+		Name:        "Test Item 123",
+		Barcode:     "1234567890",
+		Quantity:    1,
+	}); err != nil {
+		panic(err)
+	}
 
-	// if err := householdService.UpdateItem(ctx, shared.UpdateItemCommandData{
-	// 	HouseholdID: householdId,
-	// 	RoomID:      roomId,
-	// 	ItemID:      itemId,
-	// 	Name:        "Test Item 1234",
-	// 	Barcode:     "1234567890",
-	// 	Quantity:    1,
-	// }); err != nil {
-	// 	panic(err)
-	// }
+	if err := householdService.UpdateItem(ctx, shared.UpdateItemCommandData{
+		HouseholdID: householdId,
+		RoomID:      roomId,
+		ItemID:      itemId,
+		Name:        "Test Item 1234",
+		Barcode:     "1234567890",
+		Quantity:    1,
+	}); err != nil {
+		panic(err)
+	}
 
 	if err := httptransport.NewHTTPTransport(ctx, householdService, userService); err != nil {
 		panic(err)

@@ -24,7 +24,7 @@ func NewCassandraEventStore(session *gocql.Session) (*CassandraEventStore, error
 	return eventStore, nil
 }
 
-func (ces *CassandraEventStore) StoreEvents(ctx context.Context, events []es.Event) error {
+func (ces CassandraEventStore) StoreEvents(ctx context.Context, events []es.Event) error {
 	batch := ces.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
 	for _, event := range events {
 		eventData, err := json.Marshal(event.Data)
@@ -51,7 +51,7 @@ func (ces *CassandraEventStore) StoreEvents(ctx context.Context, events []es.Eve
 	return ces.session.ExecuteBatch(batch)
 }
 
-func (ces *CassandraEventStore) GetEvents(aggregateType es.AggregateType, aggregateID es.AggregateID) ([]es.Event, error) {
+func (ces CassandraEventStore) GetEvents(aggregateType es.AggregateType, aggregateID es.AggregateID) ([]es.Event, error) {
 	aggregateUUID, err := gocql.ParseUUID(string(aggregateID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse aggregate id: %w", err)
@@ -100,7 +100,7 @@ func (ces *CassandraEventStore) GetEvents(aggregateType es.AggregateType, aggreg
 	return events, nil
 }
 
-func (ces *CassandraEventStore) init() error {
+func (ces CassandraEventStore) init() error {
 	if err := ces.session.Query(
 		`CREATE TABLE IF NOT EXISTS event_store (
 			aggregate_type text,

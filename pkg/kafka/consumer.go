@@ -25,7 +25,7 @@ func NewConsumer(brokers []string, topic, consumerGroup string) (*Consumer, erro
 	return &Consumer{client: cl}, nil
 }
 
-func (c *Consumer) Consume(ctx context.Context, callback func(Record)) error {
+func (c Consumer) Consume(ctx context.Context, callback func(Record)) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -51,6 +51,6 @@ func (c *Consumer) Consume(ctx context.Context, callback func(Record)) error {
 	}
 }
 
-func (c *Consumer) Close() {
+func (c Consumer) Close() {
 	c.client.Close()
 }

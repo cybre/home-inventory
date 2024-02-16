@@ -15,7 +15,7 @@ func NewOneTimeLoginRepository(db *gocql.Session) *OneTimeLoginRepository {
 	return &OneTimeLoginRepository{db: db}
 }
 
-func (r *OneTimeLoginRepository) InsertToken(ctx context.Context, userId, token string) error {
+func (r OneTimeLoginRepository) InsertToken(ctx context.Context, userId, token string) error {
 	userID, err := gocql.ParseUUID(userId)
 	if err != nil {
 		return fmt.Errorf("failed to parse user id: %w", err)

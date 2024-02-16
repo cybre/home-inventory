@@ -42,6 +42,8 @@ func (a *UserAggregate) ApplyEvent(event es.EventData) {
 	switch e := event.(type) {
 	case UserCreatedEvent:
 		a.applyUserCreatedEvent(e)
+	case UserOneTimeTokenGeneratedEvent:
+		// no-op
 	default:
 		panic("unknown event type")
 	}
@@ -113,4 +115,5 @@ func (a *UserAggregate) applyUserCreatedEvent(event UserCreatedEvent) {
 	a.ID, _ = c.NewUserID(event.UserID)
 	a.FirstName, _ = NewFirstName(event.FirstName)
 	a.LastName, _ = NewLastName(event.LastName)
+	a.Email, _ = NewEmail(event.Email)
 }

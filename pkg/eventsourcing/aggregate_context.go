@@ -14,14 +14,14 @@ func NewAggregateContext(aggregateType AggregateType, aggregateID AggregateID, v
 	}
 }
 
-func (a *AggregateContext) AggregateID() AggregateID {
+func (a AggregateContext) AggregateID() AggregateID {
 	return a.aggregateID
 }
 
-func (a *AggregateContext) AggregateType() AggregateType {
+func (a AggregateContext) AggregateType() AggregateType {
 	return a.aggregateType
 }
 
-func (a *AggregateContext) Version() uint {
+func (a AggregateContext) Version() uint {
 	return a.version
 }

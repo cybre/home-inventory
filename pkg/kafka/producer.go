@@ -34,7 +34,7 @@ func NewProducer(brokers []string, topic string) (*Producer, error) {
 	return &Producer{client: cl}, nil
 }
 
-func (p *Producer) Produce(ctx context.Context, records ...Record) error {
+func (p Producer) Produce(ctx context.Context, records ...Record) error {
 	if err := p.client.BeginTransaction(); err != nil {
 		return fmt.Errorf("unable to start transaction: %v", err)
 	}
@@ -63,6 +63,6 @@ func (p *Producer) Produce(ctx context.Context, records ...Record) error {
 	return nil
 }
 
-func (p *Producer) Close() {
+func (p Producer) Close() {
 	p.client.Close()
 }
