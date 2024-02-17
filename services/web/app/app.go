@@ -65,6 +65,8 @@ func New(ctx context.Context, auth *authenticator.Authenticator, logger *slog.Lo
 	store := sessions.NewCookieStore([]byte("secret"))
 	e.Use(session.Middleware(store))
 
+	e.Static("/", "static")
+
 	e.GET("/login", login.Handler(auth))
 	e.GET("/callback", callback.Handler(auth))
 	e.GET("/logout", logout.Handler())
