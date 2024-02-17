@@ -6,12 +6,13 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/cybre/home-inventory/internal/authenticator"
 	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/services/web/app"
 )
 
 const serviceName = "web"
+
+var serverAddress = os.Getenv("SERVER_ADDRESS")
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -22,12 +23,7 @@ func main() {
 
 	ctx = logging.WithLogger(ctx, logger)
 
-	auth, err := authenticator.New()
-	if err != nil {
-		panic(err)
-	}
-
-	if err := app.New(ctx, auth, logger); err != nil {
+	if err := app.New(ctx, serverAddress, logger); err != nil {
 		panic(err)
 	}
 }

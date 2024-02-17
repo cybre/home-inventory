@@ -21,6 +21,7 @@ import (
 var (
 	kafkaBrokers   = strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
 	cassandraHosts = strings.Split(os.Getenv("CASSANDRA_HOSTS"), ",")
+	serverAddress  = os.Getenv("SERVER_ADDRESS")
 )
 
 const (
@@ -67,7 +68,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := httptransport.NewHTTPTransport(ctx, householdService); err != nil {
+	if err := httptransport.NewHTTPTransport(ctx, serverAddress, householdService); err != nil {
 		panic(err)
 	}
 }

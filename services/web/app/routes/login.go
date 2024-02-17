@@ -1,4 +1,4 @@
-package login
+package routes
 
 import (
 	"crypto/rand"
@@ -7,19 +7,18 @@ import (
 	"net/http"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
-	"github.com/cybre/home-inventory/services/web/app/shared"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
 
-func Handler(auth *authenticator.Authenticator) echo.HandlerFunc {
+func loginHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		state, err := generateRandomState()
 		if err != nil {
 			return fmt.Errorf("failed to generate random state: %w", err)
 		}
 
-		sess, err := session.Get(shared.AuthSessionCookieName, c)
+		sess, err := session.Get(AuthSessionCookieName, c)
 		if err != nil {
 			return fmt.Errorf("failed to get session: %w", err)
 		}

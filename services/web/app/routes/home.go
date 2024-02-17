@@ -1,8 +1,8 @@
-package home
+package routes
 
 import "github.com/labstack/echo/v4"
 
-func Handler() echo.HandlerFunc {
+func homeHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.String(200, "Hello, world!")
 	}

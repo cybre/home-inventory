@@ -24,7 +24,7 @@ type HouseholdService interface {
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error
 }
 
-func NewHTTPTransport(ctx context.Context, householdService HouseholdService) error {
+func NewHTTPTransport(ctx context.Context, serverAddress string, householdService HouseholdService) error {
 	e := echo.New()
 
 	logger := logging.FromContext(ctx)
@@ -78,7 +78,7 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService) er
 	buildHouseholdRoutes(e, householdService, validate)
 
 	go func() {
-		if err := e.Start(":3000"); err != nil {
+		if err := e.Start(serverAddress); err != nil {
 			if err == http.ErrServerClosed {
 				return
 			}

@@ -35,12 +35,10 @@ services:
   inventory:
     image: home-inventory/inventory
     restart: on-failure:10
-    ports:
-      - "8080:8080"
     environment:
       - KAFKA_BROKERS=kafka:9092
       - CASSANDRA_HOSTS=cassandra:9042
-      - REDIS_HOST=redis:6379
+      - SERVER_ADDRESS=:3000
     depends_on:
       cassandra:
         condition: service_healthy
@@ -49,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.inventory
+
   web:
     image: home-inventory/web
     restart: on-failure:10
@@ -58,6 +57,7 @@ services:
       - web.env
     environment:
       - INVENTORY_API=http://inventory:3000
+      - SERVER_ADDRESS=:8080
     depends_on:
       - inventory
     build:

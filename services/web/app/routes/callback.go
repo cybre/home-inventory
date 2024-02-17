@@ -1,18 +1,17 @@
-package callback
+package routes
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
-	"github.com/cybre/home-inventory/services/web/app/shared"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
 
-func Handler(auth *authenticator.Authenticator) echo.HandlerFunc {
+func callbackHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		session, err := session.Get(shared.AuthSessionCookieName, c)
+		session, err := session.Get(AuthSessionCookieName, c)
 		if err != nil {
 			return fmt.Errorf("failed to get session: %w", err)
 		}
@@ -39,7 +38,7 @@ func Handler(auth *authenticator.Authenticator) echo.HandlerFunc {
 		}
 
 		session.Values["access_token"] = token.AccessToken
-		session.Values[shared.AuthSessionProfileKey] = profile
+		session.Values[AuthSessionProfileKey] = profile
 		if err := session.Save(c.Request(), c.Response()); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}

@@ -1,4 +1,4 @@
-package logout
+package routes
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Handler() echo.HandlerFunc {
+func logoutHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		logoutUrl, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/v2/logout")
 		if err != nil {
