@@ -16,6 +16,7 @@ import (
 	"github.com/cybre/home-inventory/services/web/app/login"
 	"github.com/cybre/home-inventory/services/web/app/logout"
 	"github.com/cybre/home-inventory/services/web/app/postlogout"
+	"github.com/cybre/home-inventory/services/web/app/shared"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -96,17 +97,14 @@ func New(ctx context.Context, auth *authenticator.Authenticator, logger *slog.Lo
 
 func isAuthenticated(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		sess, err := session.Get("auth-session", c)
+		sess, err := session.Get(shared.AuthSessionCookieName, c)
 		if err != nil {
 			return err
 		}
 
-		if sess.Values["profile"] == nil {
+		if sess.Values[shared.AuthSessionProfileKey] == nil {
 			return c.Redirect(http.StatusSeeOther, "/login")
 		}
-
-		logger := logging.FromContext(c.Request().Context())
-		logger.Info("user is authenticated", slog.Any("profile", sess.Values["profile"]))
 
 		return next(c)
 	}
