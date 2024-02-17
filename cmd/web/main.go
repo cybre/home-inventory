@@ -8,7 +8,7 @@ import (
 
 	"github.com/cybre/home-inventory/internal/authenticator"
 	"github.com/cybre/home-inventory/internal/logging"
-	"github.com/cybre/home-inventory/web/app"
+	"github.com/cybre/home-inventory/services/web/app"
 )
 
 const serviceName = "web"

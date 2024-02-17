@@ -3,9 +3,9 @@ package household
 import (
 	"context"
 
-	"github.com/cybre/home-inventory/inventory/app/common"
-	"github.com/cybre/home-inventory/inventory/domain/household"
-	"github.com/cybre/home-inventory/inventory/shared"
+	"github.com/cybre/home-inventory/services/inventory/app/common"
+	"github.com/cybre/home-inventory/services/inventory/domain/household"
+	"github.com/cybre/home-inventory/services/inventory/shared"
 )
 
 type HouseholdService struct {

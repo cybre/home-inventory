@@ -6,7 +6,7 @@ import (
 
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	"github.com/cybre/home-inventory/internal/logging"
-	"github.com/cybre/home-inventory/inventory/domain/household"
+	"github.com/cybre/home-inventory/services/inventory/domain/household"
 )
 
 type ItemProjector struct {

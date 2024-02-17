@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	"github.com/cybre/home-inventory/internal/infrastructure"
-	apphousehold "github.com/cybre/home-inventory/inventory/app/household"
-	"github.com/cybre/home-inventory/inventory/domain/household"
+	apphousehold "github.com/cybre/home-inventory/services/inventory/app/household"
+	"github.com/cybre/home-inventory/services/inventory/domain/household"
 
 	"github.com/cybre/home-inventory/internal/cassandra"
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	"github.com/cybre/home-inventory/internal/logging"
-	httptransport "github.com/cybre/home-inventory/inventory/transport/http"
-	kafkatransport "github.com/cybre/home-inventory/inventory/transport/kafka"
+	httptransport "github.com/cybre/home-inventory/services/inventory/transport/http"
+	kafkatransport "github.com/cybre/home-inventory/services/inventory/transport/kafka"
 )
 
 var (

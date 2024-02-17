@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
-	c "github.com/cybre/home-inventory/inventory/domain/common"
+	c "github.com/cybre/home-inventory/services/inventory/domain/common"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	eh "github.com/cybre/home-inventory/internal/echohandler"
-	"github.com/cybre/home-inventory/inventory/shared"
+	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
