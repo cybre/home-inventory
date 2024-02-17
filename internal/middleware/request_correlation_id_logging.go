@@ -1,4 +1,4 @@
-package echomiddleware
+package middleware
 
 import (
 	"log/slog"

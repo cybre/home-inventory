@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cybre/home-inventory/internal/echomiddleware"
 	"github.com/cybre/home-inventory/internal/logging"
+	"github.com/cybre/home-inventory/internal/middleware"
 	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 type HouseholdService interface {
@@ -45,14 +45,14 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService) er
 		return fld.Name
 	})
 
-	e.Use(echomiddleware.RequestAndCorrelationIDLogging(logger))
-	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+	e.Use(middleware.RequestAndCorrelationIDLogging(logger))
+	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
 		LogStatus:   true,
 		LogMethod:   true,
 		LogURI:      true,
 		LogError:    true,
 		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
 			logger := logging.FromContext(c.Request().Context())
 
 			if v.Error == nil {
@@ -73,7 +73,7 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService) er
 		},
 	}))
 
-	e.Use(middleware.Recover())
+	e.Use(echomiddleware.Recover())
 
 	buildHouseholdRoutes(e, householdService, validate)
 

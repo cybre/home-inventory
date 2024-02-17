@@ -1,4 +1,4 @@
-package echohandler
+package handler
 
 import (
 	"net/http"

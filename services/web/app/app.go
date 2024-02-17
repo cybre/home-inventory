@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
-	"github.com/cybre/home-inventory/internal/echomiddleware"
 	"github.com/cybre/home-inventory/internal/logging"
+	"github.com/cybre/home-inventory/internal/middleware"
 	"github.com/cybre/home-inventory/services/web/app/callback"
 	"github.com/cybre/home-inventory/services/web/app/home"
 	"github.com/cybre/home-inventory/services/web/app/login"
@@ -20,7 +20,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 func New(ctx context.Context, auth *authenticator.Authenticator, logger *slog.Logger) error {
@@ -28,15 +28,15 @@ func New(ctx context.Context, auth *authenticator.Authenticator, logger *slog.Lo
 
 	gob.Register(map[string]interface{}{})
 
-	e.Use(echomiddleware.RequestAndCorrelationIDLogging(logger))
-	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+	e.Use(middleware.RequestAndCorrelationIDLogging(logger))
+	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
 		LogStatus:   true,
 		LogRemoteIP: true,
 		LogMethod:   true,
 		LogURI:      true,
 		LogError:    true,
 		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
 			logger := logging.FromContext(c.Request().Context())
 
 			if v.Error == nil {
@@ -59,7 +59,7 @@ func New(ctx context.Context, auth *authenticator.Authenticator, logger *slog.Lo
 		},
 	}))
 
-	e.Use(middleware.Recover())
+	e.Use(echomiddleware.Recover())
 
 	// TODO: Load key from env
 	store := sessions.NewCookieStore([]byte("secret"))

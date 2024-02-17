@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	eh "github.com/cybre/home-inventory/internal/echohandler"
+	eh "github.com/cybre/home-inventory/internal/handler"
 	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
