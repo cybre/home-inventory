@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cybre/home-inventory/internal/echomiddleware"
+	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/inventory/shared"
-	"github.com/cybre/home-inventory/pkg/logging"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -24,13 +24,7 @@ type HouseholdService interface {
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error
 }
 
-type UserService interface {
-	GenerateLoginToken(context.Context, shared.GenerateLoginTokenCommandData) error
-	CreateUser(context.Context, shared.CreateUserCommandData) error
-	LoginViaToken(context.Context, shared.LoginViaTokenCommandData) error
-}
-
-func NewHTTPTransport(ctx context.Context, householdService HouseholdService, userService UserService) error {
+func NewHTTPTransport(ctx context.Context, householdService HouseholdService) error {
 	e := echo.New()
 
 	logger := logging.FromContext(ctx)
@@ -51,18 +45,9 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService, us
 		return fld.Name
 	})
 
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			loggerCtx := logging.WithLogger(ctx, logger.With(slog.String("correlation_id", uuid.NewString())))
-			c.SetRequest(c.Request().WithContext(loggerCtx))
-
-			return next(c)
-		}
-	})
-
+	e.Use(echomiddleware.RequestAndCorrelationIDLogging(logger))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus:   true,
-		LogRemoteIP: true,
 		LogMethod:   true,
 		LogURI:      true,
 		LogError:    true,
@@ -72,18 +57,15 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService, us
 
 			if v.Error == nil {
 				logger.LogAttrs(ctx, slog.LevelInfo, "REQUEST",
-					slog.String("remote_ip", v.RemoteIP),
 					slog.String("method", v.Method),
 					slog.String("uri", v.URI),
 					slog.Int("status", v.Status),
 				)
 			} else {
 				logger.LogAttrs(ctx, slog.LevelError, "REQUEST_ERROR",
-					slog.String("remote_ip", v.RemoteIP),
 					slog.String("method", v.Method),
 					slog.String("uri", v.URI),
 					slog.Int("status", v.Status),
-					slog.String("request_id", v.RequestID),
 					slog.String("err", v.Error.Error()),
 				)
 			}
@@ -91,11 +73,12 @@ func NewHTTPTransport(ctx context.Context, householdService HouseholdService, us
 		},
 	}))
 
+	e.Use(middleware.Recover())
+
 	buildHouseholdRoutes(e, householdService, validate)
-	buildUserRoutes(e, userService, validate)
 
 	go func() {
-		if err := e.Start(":8080"); err != nil {
+		if err := e.Start(":3000"); err != nil {
 			if err == http.ErrServerClosed {
 				return
 			}

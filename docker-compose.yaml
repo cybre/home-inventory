@@ -49,6 +49,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.inventory
+  web:
+    image: home-inventory/web
+    restart: on-failure:10
+    ports:
+      - "8080:8080"
+    env_file:
+      - web.env
+    environment:
+      - INVENTORY_API=http://inventory:3000
+    depends_on:
+      - inventory
+    build:
+      context: .
+      dockerfile: Dockerfile.web
 
 volumes:
   cassandra_data:

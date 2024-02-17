@@ -24,3 +24,5 @@ go.work
 .cassandraWorkbench
 .cassandraWorkbench.jsonc
 .vscode/settings.json
+
+*.env

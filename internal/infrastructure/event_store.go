@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	es "github.com/cybre/home-inventory/pkg/eventsourcing"
+	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	"github.com/gocql/gocql"
 )
 

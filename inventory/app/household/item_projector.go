@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
+	es "github.com/cybre/home-inventory/internal/eventsourcing"
+	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/inventory/domain/household"
-	es "github.com/cybre/home-inventory/pkg/eventsourcing"
-	"github.com/cybre/home-inventory/pkg/logging"
 )
 
 type ItemProjector struct {

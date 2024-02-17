@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	c "github.com/cybre/home-inventory/inventory/domain/common"
-	es "github.com/cybre/home-inventory/pkg/eventsourcing"
 )
 
 const (

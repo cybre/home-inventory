@@ -1,6 +1,6 @@
 package household
 
-import es "github.com/cybre/home-inventory/pkg/eventsourcing"
+import es "github.com/cybre/home-inventory/internal/eventsourcing"
 
 const (
 	EventTypeHouseholdCreated es.EventType = "HouseholdCreatedEvent"

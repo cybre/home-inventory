@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/cybre/home-inventory/pkg/logging"
-	"github.com/cybre/home-inventory/pkg/utils"
+	"github.com/cybre/home-inventory/internal/logging"
+	"github.com/cybre/home-inventory/internal/utils"
 )
 
 type Command interface {

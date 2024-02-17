@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"slices"
 
-	"github.com/cybre/home-inventory/pkg/eventsourcing"
-	"github.com/cybre/home-inventory/pkg/kafka"
-	"github.com/cybre/home-inventory/pkg/logging"
-	"github.com/cybre/home-inventory/pkg/utils"
+	"github.com/cybre/home-inventory/internal/eventsourcing"
+	"github.com/cybre/home-inventory/internal/kafka"
+	"github.com/cybre/home-inventory/internal/logging"
+	"github.com/cybre/home-inventory/internal/utils"
 )
 
 type EventHandler interface {

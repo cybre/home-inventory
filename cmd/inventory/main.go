@@ -9,16 +9,13 @@ import (
 
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	apphousehold "github.com/cybre/home-inventory/inventory/app/household"
-	appuser "github.com/cybre/home-inventory/inventory/app/user"
 	"github.com/cybre/home-inventory/inventory/domain/household"
-	"github.com/cybre/home-inventory/inventory/domain/user"
-	userservices "github.com/cybre/home-inventory/inventory/domain/user/services"
 
+	"github.com/cybre/home-inventory/internal/cassandra"
+	es "github.com/cybre/home-inventory/internal/eventsourcing"
+	"github.com/cybre/home-inventory/internal/logging"
 	httptransport "github.com/cybre/home-inventory/inventory/transport/http"
 	kafkatransport "github.com/cybre/home-inventory/inventory/transport/kafka"
-	"github.com/cybre/home-inventory/pkg/cassandra"
-	es "github.com/cybre/home-inventory/pkg/eventsourcing"
-	"github.com/cybre/home-inventory/pkg/logging"
 )
 
 var (
@@ -46,21 +43,11 @@ func main() {
 	}
 	defer cassandraSession.Close()
 
-	loginInfoRepository := appuser.NewLoginInfoRepository(cassandraSession)
-	loginTokenRepository := appuser.NewLoginTokenRepository(cassandraSession)
-
-	emailUniquenessService := userservices.NewEmailUniquenessService(loginInfoRepository)
-
 	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate)
 	es.RegisterEvent(household.HouseholdCreatedEvent{})
 	es.RegisterEvent(household.RoomAddedEvent{})
 	es.RegisterEvent(household.ItemAddedEvent{})
 	es.RegisterEvent(household.ItemUpdatedEvent{})
-
-	es.RegisterAggregateRoot(user.UserAggregateType, user.NewUserAggregate(emailUniquenessService))
-	es.RegisterEvent(user.UserCreatedEvent{})
-	es.RegisterEvent(user.UserLoginTokenGeneratedEvent{})
-	es.RegisterEvent(user.UserLoginEvent{})
 
 	eventMessaging, err := infrastructure.NewKafkaEventMessaging(kafkaBrokers, eventsTopic, logger)
 	if err != nil {
@@ -75,13 +62,12 @@ func main() {
 	commandBus := es.NewCommandBus(eventStore, eventMessaging)
 
 	householdService := apphousehold.NewHouseholdService(commandBus)
-	userService := appuser.NewUserService(commandBus, loginInfoRepository, loginTokenRepository)
 
-	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging, loginInfoRepository, loginTokenRepository); err != nil {
+	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
 		panic(err)
 	}
 
-	if err := httptransport.NewHTTPTransport(ctx, householdService, userService); err != nil {
+	if err := httptransport.NewHTTPTransport(ctx, householdService); err != nil {
 		panic(err)
 	}
 }

@@ -3,7 +3,7 @@ package common
 import (
 	"context"
 
-	es "github.com/cybre/home-inventory/pkg/eventsourcing"
+	es "github.com/cybre/home-inventory/internal/eventsourcing"
 )
 
 type CommandBus interface {
