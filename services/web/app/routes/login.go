@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var redirectMap = make(map[string]string)
+
 func loginHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		state, err := generateRandomState()
@@ -28,6 +30,8 @@ func loginHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 		if err := sess.Save(c.Request(), c.Response()); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}
+
+		redirectMap[state] = c.QueryParam("redirectTo")
 
 		return c.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state))
 	}

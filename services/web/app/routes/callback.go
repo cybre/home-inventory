@@ -9,6 +9,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type User struct {
+	ID             string
+	FirstName      string
+	LastName       string
+	ProfilePicture string
+}
+
+func NewUserFromProfile(profile map[string]interface{}) *User {
+	return &User{
+		ID:             profile["sub"].(string),
+		FirstName:      profile["given_name"].(string),
+		LastName:       profile["family_name"].(string),
+		ProfilePicture: profile["picture"].(string),
+	}
+}
+
 func callbackHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		session, err := session.Get(AuthSessionCookieName, c)
@@ -37,12 +53,18 @@ func callbackHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 			return fmt.Errorf("failed to parse ID token claims: %w", err)
 		}
 
-		session.Values["access_token"] = token.AccessToken
-		session.Values[AuthSessionProfileKey] = profile
+		session.Values[AuthSessionAccessTokenKey] = token.AccessToken
+		session.Values[AuthSessionProfileKey] = NewUserFromProfile(profile)
 		if err := session.Save(c.Request(), c.Response()); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}
 
-		return c.Redirect(http.StatusTemporaryRedirect, "/")
+		redirectTo, ok := redirectMap[state]
+		if !ok || redirectTo == "" {
+			redirectTo = "/"
+		}
+		delete(redirectMap, state)
+
+		return c.Redirect(http.StatusTemporaryRedirect, redirectTo)
 	}
 }

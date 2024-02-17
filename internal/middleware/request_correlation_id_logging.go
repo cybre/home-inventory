@@ -18,7 +18,7 @@ func RequestAndCorrelationIDLogging(logger *slog.Logger) echo.MiddlewareFunc {
 			}
 
 			correlationId := c.Request().Header.Get("X-Correlation-ID")
-			if correlationId != "" {
+			if correlationId == "" {
 				correlationId = uuid.NewString()
 				c.Request().Header.Set("X-Correlation-ID", correlationId)
 			}

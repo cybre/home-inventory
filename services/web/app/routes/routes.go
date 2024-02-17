@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
 	"github.com/labstack/echo-contrib/session"
@@ -9,8 +10,9 @@ import (
 )
 
 const (
-	AuthSessionCookieName = "auth-session"
-	AuthSessionProfileKey = "profile"
+	AuthSessionCookieName     = "auth-session"
+	AuthSessionProfileKey     = "profile"
+	AuthSessionAccessTokenKey = "access_token"
 )
 
 func Initialize(e *echo.Echo, auth *authenticator.Authenticator) {
@@ -32,7 +34,7 @@ func isAuthenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if sess.Values[AuthSessionProfileKey] == nil {
-			return c.Redirect(http.StatusSeeOther, "/login")
+			return c.Redirect(http.StatusSeeOther, "/login?redirectTo="+url.QueryEscape(c.Request().URL.Path))
 		}
 
 		return next(c)

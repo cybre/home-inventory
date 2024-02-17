@@ -26,7 +26,7 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 		return fmt.Errorf("failed to create authenticator: %w", err)
 	}
 
-	gob.Register(map[string]interface{}{})
+	gob.Register(routes.User{})
 
 	e.Use(middleware.RequestAndCorrelationIDLogging(logger))
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
