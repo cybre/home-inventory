@@ -28,3 +28,5 @@ go.work
 *.env
 
 tailwindcss
+
+.DS_Store
