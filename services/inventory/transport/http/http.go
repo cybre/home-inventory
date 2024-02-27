@@ -22,6 +22,8 @@ type HouseholdService interface {
 	AddRoom(context.Context, shared.AddRoomCommandData) error
 	AddItem(context.Context, shared.AddItemCommandData) error
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error
+
+	GetUserHouseholds(context.Context, string) ([]shared.UserHousehold, error)
 }
 
 func NewHTTPTransport(ctx context.Context, serverAddress string, householdService HouseholdService) error {
@@ -47,11 +49,12 @@ func NewHTTPTransport(ctx context.Context, serverAddress string, householdServic
 
 	e.Use(middleware.RequestAndCorrelationIDLogging(logger))
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
-		LogStatus:   true,
-		LogMethod:   true,
-		LogURI:      true,
-		LogError:    true,
-		HandleError: true, // forwards error to the global error handler, so it can decide appropriate status code
+		LogStatus:       true,
+		LogMethod:       true,
+		LogURI:          true,
+		LogError:        true,
+		LogResponseSize: true,
+		HandleError:     true, // forwards error to the global error handler, so it can decide appropriate status code
 		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
 			logger := logging.FromContext(c.Request().Context())
 
@@ -60,6 +63,7 @@ func NewHTTPTransport(ctx context.Context, serverAddress string, householdServic
 					slog.String("method", v.Method),
 					slog.String("uri", v.URI),
 					slog.Int("status", v.Status),
+					slog.Int64("response_size", v.ResponseSize),
 				)
 			} else {
 				logger.LogAttrs(ctx, slog.LevelError, "REQUEST_ERROR",

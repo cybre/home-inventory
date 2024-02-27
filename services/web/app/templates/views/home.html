@@ -1,0 +1,10 @@
+{{ define "title-home" }} Home {{ end }}
+
+<h1>Home</h1>
+
+{{ if .User }}
+<p class="font-bold underline">{{ .PageData.Title }}</p>
+<p>{{ .User.FirstName }} {{ .User.LastName }}</p>
+{{ else }}
+<a href="/login">Login</a>
+{{ end }}

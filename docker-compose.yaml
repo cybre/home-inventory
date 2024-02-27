@@ -39,6 +39,8 @@ services:
       - KAFKA_BROKERS=kafka:9092
       - CASSANDRA_HOSTS=cassandra:9042
       - SERVER_ADDRESS=:3000
+    ports:
+      - "3000:3000"
     depends_on:
       cassandra:
         condition: service_healthy

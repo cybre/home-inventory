@@ -2,16 +2,18 @@ package app
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
 	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/internal/middleware"
+	inventoryclient "github.com/cybre/home-inventory/services/inventory/client"
 	"github.com/cybre/home-inventory/services/web/app/routes"
+	"github.com/cybre/home-inventory/services/web/app/templates"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -20,13 +22,12 @@ import (
 
 func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 	e := echo.New()
+	e.Renderer = templates.New()
 
-	auth, err := authenticator.New()
+	authenticator, err := authenticator.New()
 	if err != nil {
 		return fmt.Errorf("failed to create authenticator: %w", err)
 	}
-
-	gob.Register(routes.User{})
 
 	e.Use(middleware.RequestAndCorrelationIDLogging(logger))
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
@@ -59,15 +60,17 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 			return nil
 		},
 	}))
-
 	e.Use(echomiddleware.Recover())
 
 	// TODO: Load key from env
 	store := sessions.NewCookieStore([]byte("secret"))
 	e.Use(session.Middleware(store))
 
-	e.Static("/", "static")
-	routes.Initialize(e, auth)
+	e.Static("/static", "static")
+
+	inventoryClient := inventoryclient.New(os.Getenv("INVENTORY_API"))
+
+	routes.Initialize(e, authenticator, inventoryClient)
 
 	go func() {
 		if err := e.Start(serverAddress); err != nil {

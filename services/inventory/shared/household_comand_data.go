@@ -2,8 +2,10 @@ package shared
 
 type CreateHouseholdCommandData struct {
 	HouseholdID string `json:"householdId" validate:"required,uuid4"`
-	UserID      string `json:"userId" validate:"required,uuid4"`
+	UserID      string `param:"userId" validate:"required"`
 	Name        string `json:"name" validate:"required,min=3,max=50"`
+	Location    string `json:"location" validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"max=200"`
 }
 
 type AddRoomCommandData struct {

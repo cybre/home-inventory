@@ -8,26 +8,34 @@ import (
 	"github.com/cybre/home-inventory/services/inventory/shared"
 )
 
-type HouseholdService struct {
-	CommandBus common.CommandBus
+type UserHouseholdServiceRepository interface {
+	GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error)
 }
 
-func NewHouseholdService(commandBus common.CommandBus) *HouseholdService {
+type HouseholdService struct {
+	commandBus common.CommandBus
+	repository UserHouseholdServiceRepository
+}
+
+func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdServiceRepository) *HouseholdService {
 	return &HouseholdService{
-		CommandBus: commandBus,
+		commandBus: commandBus,
+		repository: repository,
 	}
 }
 
 func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.CreateHouseholdCommandData) error {
-	return s.CommandBus.Dispatch(ctx, household.CreateHouseholdCommand{
+	return s.commandBus.Dispatch(ctx, household.CreateHouseholdCommand{
 		HouseholdID: data.HouseholdID,
 		UserID:      data.UserID,
 		Name:        data.Name,
+		Location:    data.Location,
+		Description: data.Description,
 	})
 }
 
 func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomCommandData) error {
-	return s.CommandBus.Dispatch(ctx, household.AddRoomCommand{
+	return s.commandBus.Dispatch(ctx, household.AddRoomCommand{
 		HouseholdID: data.HouseholdID,
 		RoomID:      data.RoomID,
 		Name:        data.Name,
@@ -35,7 +43,7 @@ func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomComman
 }
 
 func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemCommandData) error {
-	return s.CommandBus.Dispatch(ctx, household.AddItemCommand{
+	return s.commandBus.Dispatch(ctx, household.AddItemCommand{
 		HouseholdID: data.HouseholdID,
 		RoomID:      data.RoomID,
 		ItemID:      data.ItemID,
@@ -46,7 +54,7 @@ func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemComman
 }
 
 func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItemCommandData) error {
-	return s.CommandBus.Dispatch(ctx, household.UpdateItemCommand{
+	return s.commandBus.Dispatch(ctx, household.UpdateItemCommand{
 		HouseholdID: data.HouseholdID,
 		RoomID:      data.RoomID,
 		ItemID:      data.ItemID,
@@ -54,4 +62,8 @@ func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItem
 		Barcode:     data.Barcode,
 		Quantity:    data.Quantity,
 	})
+}
+
+func (s HouseholdService) GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error) {
+	return s.repository.GetUserHouseholds(ctx, userID)
 }

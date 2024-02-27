@@ -13,6 +13,8 @@ type HouseholdCreatedEvent struct {
 	HouseholdID string `json:"householdId"`
 	UserID      string `json:"userId"`
 	Name        string `json:"name"`
+	Location    string `json:"location"`
+	Description string `json:"description"`
 }
 
 func (e HouseholdCreatedEvent) EventType() es.EventType {

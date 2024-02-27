@@ -1,49 +1,40 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
+	"github.com/cybre/home-inventory/services/inventory/shared"
+	"github.com/cybre/home-inventory/services/web/app/auth"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
 
-type User struct {
-	ID             string
-	FirstName      string
-	LastName       string
-	ProfilePicture string
+type UserHouseholdGetter interface {
+	GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error)
 }
 
-func NewUserFromProfile(profile map[string]interface{}) *User {
-	return &User{
-		ID:             profile["sub"].(string),
-		FirstName:      profile["given_name"].(string),
-		LastName:       profile["family_name"].(string),
-		ProfilePicture: profile["picture"].(string),
-	}
-}
-
-func callbackHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
+func callbackHandler(authenticator *authenticator.Authenticator, userHouseholdGetter UserHouseholdGetter) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		session, err := session.Get(AuthSessionCookieName, c)
+		session, err := session.Get(auth.AuthSessionCookieName, c)
 		if err != nil {
 			return fmt.Errorf("failed to get session: %w", err)
 		}
 
 		state := session.Values["state"].(string)
 		if state != c.QueryParam("state") {
-			return echo.NewHTTPError(http.StatusUnauthorized, "invalid state parameter")
+			return fmt.Errorf("state mismatch")
 		}
 
 		code := c.QueryParam("code")
-		token, err := auth.Exchange(c.Request().Context(), code)
+		token, err := authenticator.Exchange(c.Request().Context(), code)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to exchange code for token")
+			return fmt.Errorf("failed to exchange code for token: %w", err)
 		}
 
-		idToken, err := auth.VerifyIDToken(c.Request().Context(), token)
+		idToken, err := authenticator.VerifyIDToken(c.Request().Context(), token)
 		if err != nil {
 			return fmt.Errorf("failed to verify ID token: %w", err)
 		}
@@ -53,17 +44,27 @@ func callbackHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
 			return fmt.Errorf("failed to parse ID token claims: %w", err)
 		}
 
-		session.Values[AuthSessionAccessTokenKey] = token.AccessToken
-		session.Values[AuthSessionProfileKey] = NewUserFromProfile(profile)
-		if err := session.Save(c.Request(), c.Response()); err != nil {
-			return fmt.Errorf("failed to save session: %w", err)
+		session.Values[auth.AuthSessionAccessTokenKey] = token.AccessToken
+		user := auth.NewUserFromProfile(profile)
+
+		// Check if the user has a household
+		households, err := userHouseholdGetter.GetUserHouseholds(c.Request().Context(), user.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get user households: %w", err)
 		}
 
-		redirectTo, ok := redirectMap[state]
+		session.Values[SessionHasHouseholdKey] = len(households) > 0
+		session.Values[auth.AuthSessionProfileKey] = user
+
+		redirectTo, ok := session.Values["redirectTo"].(string)
 		if !ok || redirectTo == "" {
 			redirectTo = "/"
 		}
-		delete(redirectMap, state)
+		delete(session.Values, "redirectTo")
+
+		if err := session.Save(c.Request(), c.Response()); err != nil {
+			return fmt.Errorf("failed to save session: %w", err)
+		}
 
 		return c.Redirect(http.StatusTemporaryRedirect, redirectTo)
 	}

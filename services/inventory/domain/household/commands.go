@@ -6,6 +6,8 @@ type CreateHouseholdCommand struct {
 	HouseholdID string
 	UserID      string
 	Name        string
+	Location    string
+	Description string
 }
 
 func (c CreateHouseholdCommand) AggregateType() es.AggregateType {

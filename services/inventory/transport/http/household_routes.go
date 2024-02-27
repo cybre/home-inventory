@@ -10,10 +10,12 @@ import (
 )
 
 func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService, validate *validator.Validate) {
-	e.POST("/household", eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms", eh.NewValidateHandler(addHouseholdRoomHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms/:roomID/items", eh.NewValidateHandler(addItemHandler(householdService), validate))
-	e.POST("/household/:householdId/rooms/:roomID/items/:itemID", eh.NewValidateHandler(updateItemHandler(householdService), validate))
+	// e.POST("/household/:householdId/rooms", eh.NewValidateHandler(addHouseholdRoomHandler(householdService), validate))
+	// e.POST("/household/:householdId/rooms/:roomID/items", eh.NewValidateHandler(addItemHandler(householdService), validate))
+	// e.POST("/household/:householdId/rooms/:roomID/items/:itemID", eh.NewValidateHandler(updateItemHandler(householdService), validate))
+
+	e.GET(shared.UserHouseholdsRoute, getUserHouseholdsHandler(householdService))
+	e.POST(shared.UserHouseholdsRoute, eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
 }
 
 func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared.CreateHouseholdCommandData] {
@@ -53,5 +55,18 @@ func updateItemHandler(householdService HouseholdService) eh.Handler[shared.Upda
 		}
 
 		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+func getUserHouseholdsHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := c.Param("userId")
+
+		households, err := householdService.GetUserHouseholds(c.Request().Context(), userId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, households)
 	}
 }

@@ -11,6 +11,11 @@ const (
 	MinHouseholdNameLength = 3
 	MaxHouseholdNameLength = 50
 
+	MinHouseholdLocationLength = 3
+	MaxHouseholdLocationLength = 50
+
+	MaxHouseholdDescriptionLength = 200
+
 	MinRoomNameLength = 3
 	MaxRoomNameLength = 50
 
@@ -30,6 +35,34 @@ func NewHouseholdName(name string) (HouseholdName, error) {
 
 func (n HouseholdName) String() string {
 	return string(n)
+}
+
+type HouseholdLocation string
+
+func NewHouseholdLocation(location string) (HouseholdLocation, error) {
+	if len(location) < MinHouseholdLocationLength || len(location) > MaxHouseholdLocationLength {
+		return "", fmt.Errorf("household location must be between %d and %d characters: %s", MinHouseholdLocationLength, MaxHouseholdLocationLength, location)
+	}
+
+	return HouseholdLocation(location), nil
+}
+
+func (l HouseholdLocation) String() string {
+	return string(l)
+}
+
+type HouseholdDescription string
+
+func NewHouseholdDescription(description string) (HouseholdDescription, error) {
+	if len(description) > MaxHouseholdDescriptionLength {
+		return "", fmt.Errorf("household description must be less than %d characters", MaxHouseholdDescriptionLength)
+	}
+
+	return HouseholdDescription(description), nil
+}
+
+func (d HouseholdDescription) String() string {
+	return string(d)
 }
 
 type Rooms map[RoomID]Room

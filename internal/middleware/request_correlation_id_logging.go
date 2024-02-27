@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/cybre/home-inventory/internal/logging"
@@ -24,7 +25,11 @@ func RequestAndCorrelationIDLogging(logger *slog.Logger) echo.MiddlewareFunc {
 			}
 
 			loggerCtx := logging.WithLogger(c.Request().Context(), logger.With(slog.String("request_id", requestId), slog.String("correlation_id", correlationId)))
-			c.SetRequest(c.Request().WithContext(loggerCtx))
+
+			ctx := context.WithValue(loggerCtx, "request_id", requestId)
+			ctx = context.WithValue(ctx, "correlation_id", correlationId)
+
+			c.SetRequest(c.Request().WithContext(ctx))
 
 			return next(c)
 		}

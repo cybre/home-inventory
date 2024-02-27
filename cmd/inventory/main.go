@@ -62,9 +62,10 @@ func main() {
 	}
 	commandBus := es.NewCommandBus(eventStore, eventMessaging)
 
-	householdService := apphousehold.NewHouseholdService(commandBus)
+	userHouseholdRepository := apphousehold.NewUserHouseholdRepository(cassandraSession)
+	householdService := apphousehold.NewHouseholdService(commandBus, userHouseholdRepository)
 
-	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging); err != nil {
+	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging, userHouseholdRepository); err != nil {
 		panic(err)
 	}
 

@@ -7,33 +7,22 @@ import (
 	"net/http"
 
 	"github.com/cybre/home-inventory/internal/authenticator"
-	"github.com/labstack/echo-contrib/session"
+	"github.com/cybre/home-inventory/services/web/app/helpers"
 	"github.com/labstack/echo/v4"
 )
 
-var redirectMap = make(map[string]string)
-
-func loginHandler(auth *authenticator.Authenticator) echo.HandlerFunc {
+func loginHandler(authenticator *authenticator.Authenticator) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		state, err := generateRandomState()
 		if err != nil {
 			return fmt.Errorf("failed to generate random state: %w", err)
 		}
 
-		sess, err := session.Get(AuthSessionCookieName, c)
-		if err != nil {
-			return fmt.Errorf("failed to get session: %w", err)
+		if err := helpers.SessionSet(c, "state", state, "redirectTo", c.QueryParam("redirectTo")); err != nil {
+			return fmt.Errorf("failed to save state to session: %w", err)
 		}
 
-		sess.Values["state"] = state
-
-		if err := sess.Save(c.Request(), c.Response()); err != nil {
-			return fmt.Errorf("failed to save session: %w", err)
-		}
-
-		redirectMap[state] = c.QueryParam("redirectTo")
-
-		return c.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state))
+		return c.Redirect(http.StatusTemporaryRedirect, authenticator.AuthCodeURL(state))
 	}
 }
 

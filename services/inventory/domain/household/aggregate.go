@@ -16,9 +16,12 @@ const (
 type HouseholdAgregate struct {
 	es.AggregateContext
 
-	UserID c.UserID
-	Name   HouseholdName
-	Rooms  Rooms
+	UserID      c.UserID
+	Name        HouseholdName
+	Location    HouseholdLocation
+	Description HouseholdDescription
+
+	Rooms Rooms
 }
 
 func NewHouseholdAggregate(aggregateContext es.AggregateContext) es.AggregateRoot {
@@ -72,10 +75,22 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 		return nil, err
 	}
 
+	location, err := NewHouseholdLocation(command.Location)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := NewHouseholdDescription(command.Description)
+	if err != nil {
+		return nil, err
+	}
+
 	return c.Events(HouseholdCreatedEvent{
 		HouseholdID: a.AggregateID().String(),
 		UserID:      userId.String(),
 		Name:        name.String(),
+		Location:    location.String(),
+		Description: description.String(),
 	})
 }
 
@@ -177,6 +192,8 @@ func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command
 func (a *HouseholdAgregate) applyHouseholdCreatedEvent(event HouseholdCreatedEvent) {
 	a.UserID, _ = c.NewUserID(event.UserID)
 	a.Name, _ = NewHouseholdName(event.Name)
+	a.Location, _ = NewHouseholdLocation(event.Location)
+	a.Description, _ = NewHouseholdDescription(event.Description)
 	a.Rooms = NewRooms()
 }
 
