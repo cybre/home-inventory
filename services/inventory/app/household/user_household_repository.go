@@ -3,8 +3,8 @@ package household
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/gocql/gocql"
 )
 
@@ -22,23 +22,29 @@ func (r UserHouseholdRepository) InsertHousehold(ctx context.Context, userId str
 		return fmt.Errorf("invalid household ID: %s", householdId)
 	}
 
-	return r.db.Query("INSERT INTO user_households (user_id, household_id, name, location, description) VALUES (?, ?, ?, ?, ?)", userId, householdUUID, name, location, description).WithContext(ctx).Exec()
+	return r.db.Query("INSERT INTO user_households (user_id, household_id, name, location, description, item_count, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)", userId, householdUUID, name, location, description, 0, time.Now().UnixMilli()).WithContext(ctx).Exec()
 }
 
-func (r UserHouseholdRepository) GetUserHouseholds(ctx context.Context, userId string) ([]shared.UserHousehold, error) {
+func (r UserHouseholdRepository) GetUserHouseholds(ctx context.Context, userId string) ([]UserHouseholdModel, error) {
 	var householdId gocql.UUID
 	var name, location, description string
-	iter := r.db.Query("SELECT household_id, name, location, description FROM user_households WHERE user_id = ?", userId).WithContext(ctx).Iter()
+	var item_count int
+	var timestamp int64
+	var rooms []UserHouseholdRoomModel
+	iter := r.db.Query("SELECT household_id, name, location, description, item_count, rooms, timestamp FROM user_households WHERE user_id = ?", userId).WithContext(ctx).Iter()
 	defer iter.Close()
 
-	households := make([]shared.UserHousehold, 0)
-	for iter.Scan(&householdId, &name, &location, &description) {
-		households = append(households, shared.UserHousehold{
+	households := make([]UserHouseholdModel, 0)
+	for iter.Scan(&householdId, &name, &location, &description, &item_count, &rooms, &timestamp) {
+		households = append(households, UserHouseholdModel{
 			UserID:      userId,
 			HouseholdID: householdId.String(),
 			Name:        name,
 			Location:    location,
 			Description: description,
+			ItemCount:   item_count,
+			Rooms:       rooms,
+			Timestamp:   timestamp,
 		})
 	}
 

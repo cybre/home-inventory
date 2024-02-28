@@ -3,21 +3,22 @@ package household
 import (
 	"context"
 
+	"github.com/cybre/home-inventory/internal/utils"
 	"github.com/cybre/home-inventory/services/inventory/app/common"
 	"github.com/cybre/home-inventory/services/inventory/domain/household"
 	"github.com/cybre/home-inventory/services/inventory/shared"
 )
 
-type UserHouseholdServiceRepository interface {
-	GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error)
+type UserHouseholdGetter interface {
+	GetUserHouseholds(ctx context.Context, userID string) ([]UserHouseholdModel, error)
 }
 
 type HouseholdService struct {
 	commandBus common.CommandBus
-	repository UserHouseholdServiceRepository
+	repository UserHouseholdGetter
 }
 
-func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdServiceRepository) *HouseholdService {
+func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdGetter) *HouseholdService {
 	return &HouseholdService{
 		commandBus: commandBus,
 		repository: repository,
@@ -65,5 +66,36 @@ func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItem
 }
 
 func (s HouseholdService) GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error) {
-	return s.repository.GetUserHouseholds(ctx, userID)
+	households, err := s.repository.GetUserHouseholds(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return toSharedUserHouseholds(households), nil
+}
+
+func toSharedUserHouseholds(households []UserHouseholdModel) []shared.UserHousehold {
+	sharedHouseholds := make([]shared.UserHousehold, len(households))
+	for i, household := range households {
+		sharedHouseholds[i] = shared.UserHousehold{
+			UserID:      household.UserID,
+			HouseholdID: household.HouseholdID,
+			Name:        household.Name,
+			Location:    household.Location,
+			Description: household.Description,
+			ItemCount:   household.ItemCount,
+			Rooms:       utils.Map(household.Rooms, toSharedUserHouseholdRoom),
+			Timestamp:   household.Timestamp,
+		}
+	}
+
+	return sharedHouseholds
+}
+
+func toSharedUserHouseholdRoom(i uint, room UserHouseholdRoomModel) shared.UserHouseholdRoom {
+	return shared.UserHouseholdRoom{
+		RoomID:    room.RoomID,
+		Name:      room.Name,
+		ItemCount: room.ItemCount,
+	}
 }

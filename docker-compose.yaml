@@ -32,6 +32,14 @@ services:
       timeout: 10s
       retries: 5
 
+  redis_client_cache:
+    image: redis:latest
+    restart: on-failure:10
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_client_cache_data:/data
+
   inventory:
     image: home-inventory/inventory
     restart: on-failure:10
@@ -50,26 +58,26 @@ services:
       context: .
       dockerfile: Dockerfile.inventory
 
-  web:
-    image: home-inventory/web
-    restart: on-failure:10
-    ports:
-      - "8080:8080"
-    env_file:
-      - web.env
-    environment:
-      - INVENTORY_API=http://inventory:3000
-      - SERVER_ADDRESS=:8080
-    depends_on:
-      - inventory
-    build:
-      context: .
-      dockerfile: Dockerfile.web
+  # web:
+  #   image: home-inventory/web
+  #   restart: on-failure:10
+  #   ports:
+  #     - "8080:8080"
+  #   env_file:
+  #     - web.env
+  #   environment:
+  #     - INVENTORY_API=http://inventory:3000
+  #     - SERVER_ADDRESS=:8080
+  #   depends_on:
+  #     - inventory
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.web
 
 volumes:
   cassandra_data:
     driver: local
-  redis_data:
+  redis_client_cache_data:
     driver: local
   kafka_data:
     driver: local

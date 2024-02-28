@@ -45,16 +45,7 @@ func callbackHandler(authenticator *authenticator.Authenticator, userHouseholdGe
 		}
 
 		session.Values[auth.AuthSessionAccessTokenKey] = token.AccessToken
-		user := auth.NewUserFromProfile(profile)
-
-		// Check if the user has a household
-		households, err := userHouseholdGetter.GetUserHouseholds(c.Request().Context(), user.ID)
-		if err != nil {
-			return fmt.Errorf("failed to get user households: %w", err)
-		}
-
-		session.Values[SessionHasHouseholdKey] = len(households) > 0
-		session.Values[auth.AuthSessionProfileKey] = user
+		session.Values[auth.AuthSessionProfileKey] = auth.NewUserFromProfile(profile)
 
 		redirectTo, ok := session.Values["redirectTo"].(string)
 		if !ok || redirectTo == "" {

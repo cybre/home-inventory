@@ -1,0 +1,71 @@
+<div class="flex h-screen flex-col justify-between border-e bg-white w-80">
+  <div class="px-4 py-6">
+    <ul class="mt-1 space-y-1">
+      <li>
+        <a
+          href="/"
+          class="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
+        >
+          Dashboard
+        </a>
+      </li>
+
+      {{ range $household := .Households }} {{ if not $household.Rooms }}
+      <a
+        href="/households/{{ .HouseholdID }}"
+        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex gap-x-2 items-center"
+      >
+        <span>{{ $household.Name}}</span>
+        <span
+          class="inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-1 text-purple-700 text-xs font-medium"
+          >{{ $household.ItemCount }}</span
+        >
+      </a>
+      {{ else }}
+      <li>
+        <details class="group [&_summary::-webkit-details-marker]:hidden">
+          <summary
+            class="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <a
+              href="/households/{{ .HouseholdID }}"
+              class="text-sm font-medium flex-grow"
+              >{{ $household.Name }}</a
+            >
+
+            <span
+              class="shrink-0 transition duration-300 group-open:-rotate-180"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </span>
+          </summary>
+
+          <ul class="mt-2 space-y-1 px-4">
+            {{ range $room := $household.Rooms }}
+            <li>
+              <a
+                href="/households/{{ $household.HouseholdID }}/rooms/{{ .RoomID }}"
+                class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              >
+                {{ $room.Name }}
+              </a>
+            </li>
+            {{ end }}
+          </ul>
+        </details>
+      </li>
+      {{ end }} {{ end }}
+    </ul>
+  </div>
+</div>
