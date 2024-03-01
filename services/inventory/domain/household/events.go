@@ -4,6 +4,7 @@ import es "github.com/cybre/home-inventory/internal/eventsourcing"
 
 const (
 	EventTypeHouseholdCreated es.EventType = "HouseholdCreatedEvent"
+	EventTypeHouseholdUpdated es.EventType = "HouseholdUpdatedEvent"
 	EventTypeRoomAdded        es.EventType = "RoomAddedEvent"
 	EventTypeItemAdded        es.EventType = "ItemAddedEvent"
 	EventTypeItemUpdated      es.EventType = "ItemUpdatedEvent"
@@ -19,6 +20,18 @@ type HouseholdCreatedEvent struct {
 
 func (e HouseholdCreatedEvent) EventType() es.EventType {
 	return EventTypeHouseholdCreated
+}
+
+type HouseholdUpdatedEvent struct {
+	HouseholdID string `json:"householdId"`
+	UserID      string `json:"userId"`
+	Name        string `json:"name"`
+	Location    string `json:"location"`
+	Description string `json:"description"`
+}
+
+func (e HouseholdUpdatedEvent) EventType() es.EventType {
+	return EventTypeHouseholdUpdated
 }
 
 type RoomAddedEvent struct {

@@ -16,6 +16,8 @@ func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService, valid
 
 	e.GET(shared.UserHouseholdsRoute, getUserHouseholdsHandler(householdService))
 	e.POST(shared.UserHouseholdsRoute, eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
+	e.GET(shared.UserHouseholdRoute, getUserHouseholdHandler(householdService))
+	e.PUT(shared.UserHouseholdRoute, eh.NewValidateHandler(updateHouseholdHandler(householdService), validate))
 }
 
 func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared.CreateHouseholdCommandData] {
@@ -68,5 +70,29 @@ func getUserHouseholdsHandler(householdService HouseholdService) echo.HandlerFun
 		}
 
 		return c.JSON(http.StatusOK, households)
+	}
+}
+
+func getUserHouseholdHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := c.Param("userId")
+		householdId := c.Param("householdId")
+
+		household, err := householdService.GetUserHousehold(c.Request().Context(), userId, householdId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, household)
+	}
+}
+
+func updateHouseholdHandler(householdService HouseholdService) eh.Handler[shared.UpdateHouseholdCommandData] {
+	return func(c echo.Context, data shared.UpdateHouseholdCommandData) error {
+		if err := householdService.UpdateHousehold(c.Request().Context(), data); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusNoContent)
 	}
 }

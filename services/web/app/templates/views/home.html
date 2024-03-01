@@ -1,10 +1,33 @@
-{{ define "title-home" }} Home {{ end }}
+{{ define "title-home" }} {{ $.PageData.Title }} {{ end }}
 
-<h1>Home</h1>
-
-{{ if .User }}
-<p class="font-bold underline">{{ .PageData.Title }}</p>
-<p>{{ .User.FirstName }} {{ .User.LastName }}</p>
-{{ else }}
-<a href="/login">Login</a>
-{{ end }}
+<div class="grid gap-2 lg:gap-4 md:grid-cols-2 2xl:grid-cols-3" hx-boost="true">
+  {{ range $household := .Households }}
+    <div
+      class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300"
+      id="household-{{ .HouseholdID }}"
+    >
+      {{ if eq $.PageData.Editing.HouseholdID $household.HouseholdID }}
+        {{ template "household_edit" $household }} 
+      {{ else }}
+        {{ template "household_card" $household }}
+      {{end}}
+    </div>
+  {{ end }}
+  <div
+    class="rounded-lg border-[3px] border-dashed bg-card text-card-foreground flex items-center justify-center group cursor-pointer hover:border-gray-300 transition-colors duration-150 p-6 min-h-80"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      viewBox="0 0 490.2 490.2"
+      class="h-16 w-16 opacity-40 group-hover:opacity-60 transition-opacity duration-150 group-active:opacity-80"
+    >
+      <path
+        d="M418.5,418.5c95.6-95.6,95.6-251.2,0-346.8s-251.2-95.6-346.8,0s-95.6,251.2,0,346.8S322.9,514.1,418.5,418.5z M89,89    c86.1-86.1,226.1-86.1,312.2,0s86.1,226.1,0,312.2s-226.1,86.1-312.2,0S3,175.1,89,89z"
+      />
+      <path
+        d="M245.1,336.9c3.4,0,6.4-1.4,8.7-3.6c2.2-2.2,3.6-5.3,3.6-8.7v-67.3h67.3c3.4,0,6.4-1.4,8.7-3.6c2.2-2.2,3.6-5.3,3.6-8.7    c0-6.8-5.5-12.3-12.2-12.2h-67.3v-67.3c0-6.8-5.5-12.3-12.2-12.2c-6.8,0-12.3,5.5-12.2,12.2v67.3h-67.3c-6.8,0-12.3,5.5-12.2,12.2    c0,6.8,5.5,12.3,12.2,12.2h67.3v67.3C232.8,331.4,238.3,336.9,245.1,336.9z"
+      />
+    </svg>
+  </div>
+</div>

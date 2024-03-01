@@ -1,4 +1,5 @@
 CREATE TYPE user_households_room (
+  household_id UUID,
   room_id UUID,
   name TEXT,
   item_count INT

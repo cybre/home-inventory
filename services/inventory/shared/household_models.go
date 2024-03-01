@@ -1,9 +1,10 @@
 package shared
 
 type UserHouseholdRoom struct {
-	RoomID    string `json:"roomId"`
-	Name      string `json:"name"`
-	ItemCount int    `json:"itemCount"`
+	HouseholdID string `json:"householdId"`
+	RoomID      string `json:"roomId"`
+	Name        string `json:"name"`
+	ItemCount   int    `json:"itemCount"`
 }
 
 type UserHousehold struct {

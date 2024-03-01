@@ -15,6 +15,7 @@ import (
 	inventoryclient "github.com/cybre/home-inventory/services/inventory/client"
 	"github.com/cybre/home-inventory/services/web/app/routes"
 	"github.com/cybre/home-inventory/services/web/app/templates"
+	"github.com/cybre/home-inventory/services/web/app/toast"
 	"github.com/eko/gocache/lib/v4/cache"
 	redis_store "github.com/eko/gocache/store/redis/v4"
 	"github.com/gorilla/sessions"
@@ -26,6 +27,19 @@ import (
 
 func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 	e := echo.New()
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		te, ok := err.(toast.Toast)
+		if !ok {
+			te = toast.Danger("There has been an unexpected error")
+		}
+
+		if te.Level != toast.SUCCESS {
+			c.Response().Header().Set("HX-Reswap", "none")
+		}
+
+		te.SetHXTriggerHeader(c)
+	}
+
 	e.Renderer = templates.New()
 
 	authenticator, err := authenticator.New()
@@ -74,7 +88,6 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 	e.Use(echomiddleware.Recover())
 	// TODO: Load key from env
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
-	e.Use(routes.LoadHouseholdsIntoContext(inventoryClient))
 
 	e.Static("/static", "static")
 

@@ -7,7 +7,10 @@ import (
 	"strings"
 
 	"github.com/cybre/home-inventory/services/inventory/client"
+	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/cybre/home-inventory/services/web/app/helpers"
+	"github.com/cybre/home-inventory/services/web/app/htmx"
+	"github.com/cybre/home-inventory/services/web/app/toast"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -37,5 +40,97 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 		}
 
 		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
+type HouseholdUpdater interface {
+	HouseholdGetter
+	UpdateHousehold(ctx context.Context, household client.UpdateHouseholdRequest) error
+}
+
+func editHouseholdHandler(householdUpdater HouseholdUpdater) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+
+		household, err := householdUpdater.GetUserHousehold(c.Request().Context(), user.ID, householdID)
+		if err != nil {
+			return fmt.Errorf("failed to get household: %w", err)
+		}
+
+		if err := householdUpdater.UpdateHousehold(c.Request().Context(), client.UpdateHouseholdRequest{
+			UserID:      user.ID,
+			HouseholdID: householdID,
+			Name:        c.FormValue("name"),
+			Location:    c.FormValue("location"),
+			Description: c.FormValue("description"),
+		}); err != nil {
+			return toast.Danger("Failed to update household")
+		}
+
+		household.Name = c.FormValue("name")
+		household.Location = c.FormValue("location")
+		household.Description = c.FormValue("description")
+
+		toast.Success(c, "Household has been updated successfully")
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_card", household)
+		}
+
+		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
+type HouseholdGetter interface {
+	GetUserHousehold(ctx context.Context, userID, householdID string) (shared.UserHousehold, error)
+}
+
+func editHouseholdViewHandler(householdGetter HouseholdGetter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+		household, err := householdGetter.GetUserHousehold(c.Request().Context(), user.ID, householdID)
+		if err != nil {
+			return fmt.Errorf("failed to get household: %w", err)
+		}
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_edit", household)
+		}
+
+		return c.Render(http.StatusOK, "home", map[string]interface{}{
+			"Title":   "Edit Household",
+			"Editing": household,
+		})
+	}
+}
+
+func getHouseholdHandler(householdGetter HouseholdGetter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+		household, err := householdGetter.GetUserHousehold(c.Request().Context(), user.ID, householdID)
+		if err != nil {
+			return fmt.Errorf("failed to get household: %w", err)
+		}
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_card", household)
+		}
+
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }

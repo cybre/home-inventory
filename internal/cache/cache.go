@@ -25,7 +25,7 @@ func (c *Cache[T]) Get(ctx context.Context, key any) (T, error) {
 }
 
 func (c *Cache[T]) Set(ctx context.Context, key any, object T) error {
-	return c.cache.Set(ctx, key, object)
+	return c.cache.Set(ctx, key, object, store.WithExpiration(c.expiration))
 }
 
 func (c *Cache[T]) SetWithExpiration(ctx context.Context, key any, object T, expiration time.Duration) error {

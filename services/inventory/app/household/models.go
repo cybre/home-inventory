@@ -1,9 +1,10 @@
 package household
 
 type UserHouseholdRoomModel struct {
-	RoomID    string `cql:"room_id"`
-	Name      string `cql:"name"`
-	ItemCount int    `cql:"item_count"`
+	HouseholdID string `cql:"household_id"`
+	RoomID      string `cql:"room_id"`
+	Name        string `cql:"name"`
+	ItemCount   int    `cql:"item_count"`
 }
 
 type UserHouseholdModel struct {

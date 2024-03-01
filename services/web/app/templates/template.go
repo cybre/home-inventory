@@ -10,6 +10,8 @@ import (
 
 	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/cybre/home-inventory/services/web/app/auth"
+	"github.com/cybre/home-inventory/services/web/app/helpers"
+	"github.com/cybre/home-inventory/services/web/app/htmx"
 	"github.com/cybre/home-inventory/services/web/app/routes"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -64,17 +66,24 @@ func (t *Renderer) Render(w io.Writer, name string, pageData interface{}, c echo
 		return fmt.Errorf("failed to get auth session: %w", err)
 	}
 
-	households, ok := c.Get(routes.ContextHouseholdsKey).([]shared.UserHousehold)
+	households, ok := helpers.ContextGet[[]shared.UserHousehold](c, routes.ContextHouseholdsKey)
 	if !ok {
 		households = []shared.UserHousehold{}
 	}
 
-	data := map[string]interface{}{
-		"ShouldShowSidebar": len(households) > 0,
-		"User":              sess.Values[auth.AuthSessionProfileKey],
-		"Households":        households,
-		"PageData":          pageData,
+	opts := []render.HTMLOptions{}
+	if htmx.IsHTMXRequest(c) {
+		opts = append(opts, render.HTMLOptions{Layout: "empty_layout"})
+	} else {
+		pageData = map[string]interface{}{
+			"ShouldShowSidebar": len(households) > 0,
+			"User":              sess.Values[auth.AuthSessionProfileKey],
+			"Households":        households,
+			"PageData":          pageData,
+		}
 	}
 
-	return t.r.HTML(w, http.StatusOK, name, data)
+	fmt.Printf("opts: %v\n", opts)
+
+	return t.r.HTML(w, http.StatusOK, name, pageData, opts...)
 }

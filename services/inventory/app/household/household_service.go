@@ -11,6 +11,7 @@ import (
 
 type UserHouseholdGetter interface {
 	GetUserHouseholds(ctx context.Context, userID string) ([]UserHouseholdModel, error)
+	GetUserHousehold(ctx context.Context, userID, householdID string) (UserHouseholdModel, error)
 }
 
 type HouseholdService struct {
@@ -27,6 +28,16 @@ func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdG
 
 func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.CreateHouseholdCommandData) error {
 	return s.commandBus.Dispatch(ctx, household.CreateHouseholdCommand{
+		HouseholdID: data.HouseholdID,
+		UserID:      data.UserID,
+		Name:        data.Name,
+		Location:    data.Location,
+		Description: data.Description,
+	})
+}
+
+func (s HouseholdService) UpdateHousehold(ctx context.Context, data shared.UpdateHouseholdCommandData) error {
+	return s.commandBus.Dispatch(ctx, household.UpdateHouseholdCommand{
 		HouseholdID: data.HouseholdID,
 		UserID:      data.UserID,
 		Name:        data.Name,
@@ -74,28 +85,42 @@ func (s HouseholdService) GetUserHouseholds(ctx context.Context, userID string) 
 	return toSharedUserHouseholds(households), nil
 }
 
+func (s HouseholdService) GetUserHousehold(ctx context.Context, userID, householdID string) (shared.UserHousehold, error) {
+	household, err := s.repository.GetUserHousehold(ctx, userID, householdID)
+	if err != nil {
+		return shared.UserHousehold{}, err
+	}
+
+	return toSharedUserHousehold(household), nil
+}
+
 func toSharedUserHouseholds(households []UserHouseholdModel) []shared.UserHousehold {
 	sharedHouseholds := make([]shared.UserHousehold, len(households))
 	for i, household := range households {
-		sharedHouseholds[i] = shared.UserHousehold{
-			UserID:      household.UserID,
-			HouseholdID: household.HouseholdID,
-			Name:        household.Name,
-			Location:    household.Location,
-			Description: household.Description,
-			ItemCount:   household.ItemCount,
-			Rooms:       utils.Map(household.Rooms, toSharedUserHouseholdRoom),
-			Timestamp:   household.Timestamp,
-		}
+		sharedHouseholds[i] = toSharedUserHousehold(household)
 	}
 
 	return sharedHouseholds
 }
 
+func toSharedUserHousehold(household UserHouseholdModel) shared.UserHousehold {
+	return shared.UserHousehold{
+		UserID:      household.UserID,
+		HouseholdID: household.HouseholdID,
+		Name:        household.Name,
+		Location:    household.Location,
+		Description: household.Description,
+		ItemCount:   household.ItemCount,
+		Rooms:       utils.Map(household.Rooms, toSharedUserHouseholdRoom),
+		Timestamp:   household.Timestamp,
+	}
+}
+
 func toSharedUserHouseholdRoom(i uint, room UserHouseholdRoomModel) shared.UserHouseholdRoom {
 	return shared.UserHouseholdRoom{
-		RoomID:    room.RoomID,
-		Name:      room.Name,
-		ItemCount: room.ItemCount,
+		HouseholdID: room.HouseholdID,
+		RoomID:      room.RoomID,
+		Name:        room.Name,
+		ItemCount:   room.ItemCount,
 	}
 }

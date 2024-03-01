@@ -1,6 +1,5 @@
 {{ define "title-onboarding_create_household" }} Create household {{ end }}
 
-
 <div
   class="rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md mx-auto m-10"
 >
@@ -25,6 +24,8 @@
           name="name"
           placeholder="Name"
           required=""
+          minlength="3"
+          maxlength="50"
         />
       </div>
       <div class="space-y-2">
@@ -38,6 +39,8 @@
           name="location"
           placeholder="Location"
           required=""
+          minlength="3"
+          maxlength="50"
         />
       </div>
       <div class="space-y-2">
@@ -50,6 +53,7 @@
           id="description"
           name="description"
           placeholder="Description"
+          maxlength="200"
         ></textarea>
       </div>
     </div>

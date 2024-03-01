@@ -8,6 +8,14 @@ type CreateHouseholdCommandData struct {
 	Description string `json:"description" validate:"max=200"`
 }
 
+type UpdateHouseholdCommandData struct {
+	HouseholdID string `param:"householdId" validate:"required,uuid4"`
+	UserID      string `param:"userId" validate:"required"`
+	Name        string `json:"name" validate:"required,min=3,max=50"`
+	Location    string `json:"location" validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"max=200"`
+}
+
 type AddRoomCommandData struct {
 	HouseholdID string `param:"householdId" validate:"required,uuid4"`
 	RoomID      string `json:"roomId" validate:"required,uuid4"`

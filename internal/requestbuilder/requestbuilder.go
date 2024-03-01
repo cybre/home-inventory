@@ -6,14 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/rehttp"
 	"github.com/cybre/home-inventory/internal/cache"
-	"github.com/cybre/home-inventory/internal/logging"
+	"github.com/cybre/home-inventory/internal/utils"
 )
 
 const (
@@ -30,9 +29,6 @@ type RequestBuilder struct {
 	headers     http.Header
 	httpClient  *http.Client
 	queryParams map[string][]string
-	cache       *cache.Cache[string]
-	cacheKey    string
-	setCacheFn  func() any
 }
 
 func New(method, url string) *RequestBuilder {
@@ -45,8 +41,6 @@ func New(method, url string) *RequestBuilder {
 		url:         url,
 		queryParams: make(map[string][]string),
 		input:       nil,
-		cache:       nil,
-		cacheKey:    "",
 	}
 }
 
@@ -77,9 +71,7 @@ func (r *RequestBuilder) WithQueryParam(key string, values ...string) *RequestBu
 }
 
 func (r *RequestBuilder) WithHeader(key string, values ...string) *RequestBuilder {
-	for _, v := range values {
-		r.headers.Add(key, v)
-	}
+	r.headers[key] = values
 
 	return r
 }
@@ -89,22 +81,29 @@ func (r *RequestBuilder) WithCache(cache *cache.Cache[string], key string) *Requ
 		panic("WithCache can only be used with GET and HEAD requests")
 	}
 
-	r.cache = cache
-	r.cacheKey = key
+	r.httpClient.Transport = NewAutoCacheTransport(r.httpClient.Transport, cache, key)
 
 	return r
 }
 
-func (r *RequestBuilder) WithSetCacheFn(cache *cache.Cache[string], key string, setCacheFn func() any) *RequestBuilder {
+func (r *RequestBuilder) WithSetCacheFn(cache *cache.Cache[string], setCacheFns ...SetCacheFn) *RequestBuilder {
 	if !methodIsAction(r.method) {
 		panic("WithSetCacheFn can only be used with POST, PUT, PATCH, and DELETE requests")
 	}
 
-	r.cache = cache
-	r.cacheKey = key
-	r.setCacheFn = setCacheFn
+	r.httpClient.Transport = NewSetCacheTransport(r.httpClient.Transport, cache, setCacheFns...)
 
 	return r
+}
+
+func (r *RequestBuilder) WithInvalidateCache(cache *cache.Cache[string], keys ...string) *RequestBuilder {
+	setCacheFns := utils.Map(keys, func(_ uint, key string) SetCacheFn {
+		return func() (string, any) {
+			return key, nil
+		}
+	})
+
+	return r.WithSetCacheFn(cache, setCacheFns...)
 }
 
 func (r *RequestBuilder) WithRetry(additionalStatuses ...int) *RequestBuilder {
@@ -167,70 +166,7 @@ func (r *RequestBuilder) Build(ctx context.Context) (*http.Request, error) {
 	return req, nil
 }
 
-func (r *RequestBuilder) getFromCache(ctx context.Context) (*http.Response, bool) {
-	if r.cache == nil || !methodIsCacheable(r.method) {
-		return nil, false
-	}
-
-	value, err := r.cache.Get(ctx, r.cacheKey)
-	if err != nil {
-		return nil, false
-	}
-
-	return &http.Response{
-		StatusCode: http.StatusOK,
-		Body:       io.NopCloser(strings.NewReader(value)),
-	}, true
-}
-
-func (r *RequestBuilder) saveToCache(ctx context.Context, response *http.Response) error {
-	if r.cache == nil || (response.StatusCode < 200 || response.StatusCode >= 300) {
-		return nil
-	}
-
-	if r.setCacheFn != nil && !methodIsCacheable(r.method) {
-		value := r.setCacheFn()
-		if value == nil {
-			if err := r.cache.Delete(ctx, r.cacheKey); err != nil {
-				return fmt.Errorf("failed to delete cache via setCacheFn: %w", err)
-			}
-		}
-
-		stringValue, err := json.Marshal(value)
-		if err != nil {
-			return fmt.Errorf("failed to marshal setCacheFn return value: %w", err)
-		}
-
-		if err := r.cache.Set(ctx, r.cacheKey, string(stringValue)); err != nil {
-			return fmt.Errorf("failed to set cacheFn cache: %w", err)
-		}
-
-		return nil
-	}
-
-	if methodIsCacheable(r.method) {
-		defer response.Body.Close()
-
-		body, err := io.ReadAll(response.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read response body: %w", err)
-		}
-
-		if err := r.cache.Set(ctx, r.cacheKey, string(body)); err != nil {
-			return fmt.Errorf("failed to set response cache: %w", err)
-		}
-
-		response.Body = io.NopCloser(bytes.NewReader(body))
-	}
-
-	return nil
-}
-
 func (r *RequestBuilder) Do(ctx context.Context) (*http.Response, error) {
-	if resp, hit := r.getFromCache(ctx); hit {
-		return resp, nil
-	}
-
 	req, err := r.Build(ctx)
 	if err != nil {
 		return nil, err
@@ -239,10 +175,6 @@ func (r *RequestBuilder) Do(ctx context.Context) (*http.Response, error) {
 	response, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := r.saveToCache(ctx, response); err != nil {
-		logging.FromContext(ctx).Error("failed to save response body to cache", slog.Any("error", err))
 	}
 
 	return response, nil

@@ -19,11 +19,13 @@ import (
 
 type HouseholdService interface {
 	CreateHousehold(context.Context, shared.CreateHouseholdCommandData) error
+	UpdateHousehold(context.Context, shared.UpdateHouseholdCommandData) error
 	AddRoom(context.Context, shared.AddRoomCommandData) error
 	AddItem(context.Context, shared.AddItemCommandData) error
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error
 
 	GetUserHouseholds(context.Context, string) ([]shared.UserHousehold, error)
+	GetUserHousehold(context.Context, string, string) (shared.UserHousehold, error)
 }
 
 func NewHTTPTransport(ctx context.Context, serverAddress string, householdService HouseholdService) error {

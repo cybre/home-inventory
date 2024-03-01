@@ -18,6 +18,22 @@ func (c CreateHouseholdCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.HouseholdID)
 }
 
+type UpdateHouseholdCommand struct {
+	HouseholdID string
+	UserID      string
+	Name        string
+	Location    string
+	Description string
+}
+
+func (c UpdateHouseholdCommand) AggregateType() es.AggregateType {
+	return HouseholdAggregateType
+}
+
+func (c UpdateHouseholdCommand) AggregateID() es.AggregateID {
+	return es.AggregateID(c.HouseholdID)
+}
+
 type AddRoomCommand struct {
 	HouseholdID string
 	RoomID      string
