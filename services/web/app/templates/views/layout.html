@@ -27,7 +27,7 @@
 
     <div
       x-data="{show: false, level: '', levelTitle: '', text: '', timeout: null, colors: {danger: 'red', info: 'blue', success: 'green', warning: 'yellow'}}"
-      @show-toast.window="clearTimeout(timeout); show = true; level=$event.detail.level; levelTitle=$event.detail.levelTitle; text=$event.detail.message; "
+      @show-toast.window="clearTimeout(timeout); show = true; level=$event.detail.level; levelTitle=$event.detail.levelTitle; text=$event.detail.message; timeout = setTimeout(() => show = false, 5000);"
       x-show="show"
       style="display: none"
       class="fixed top-5 left-1/2 transform -translate-x-1/2 w-[400px]"
