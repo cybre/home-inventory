@@ -30,7 +30,7 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		te, ok := err.(toast.Toast)
 		if !ok {
-			te = toast.Danger("There has been an unexpected error")
+			te = toast.Error("There has been an unexpected error")
 		}
 
 		if te.Level != toast.SUCCESS {

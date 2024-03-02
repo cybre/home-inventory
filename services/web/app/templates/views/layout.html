@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="htmx-config" content='{"scrollIntoViewOnBoost":false}'>
+    <meta name="htmx-config" content='{"scrollIntoViewOnBoost":false}' />
     <title>{{ partial "title" }} | Home Inventory</title>
     <script
       src="https://unpkg.com/htmx.org@1.9.10"
@@ -26,44 +26,162 @@
     </div>
 
     <div
-      x-data="{show: false, level: '', levelTitle: '', text: '', timeout: null, colors: {danger: 'red', info: 'blue', success: 'green', warning: 'yellow'}}"
-      @show-toast.window="clearTimeout(timeout); show = true; level=$event.detail.level; levelTitle=$event.detail.levelTitle; text=$event.detail.message; timeout = setTimeout(() => show = false, 5000);"
-      x-show="show"
-      style="display: none"
-      class="fixed top-5 left-1/2 transform -translate-x-1/2 w-[400px]"
+      class="fixed top-5 right-5 w-[350px]"
+      x-data="{
+        titleColors: {error: 'text-red-800', info: 'text-blue-800', success: 'text-green-800', warning: 'text-yellow-800'},
+        messageColors: {error: 'text-red-700', info: 'text-blue-700', success: 'text-green-700', warning: 'text-yellow-700'},
+        bgColors: {error: 'bg-red-50', info: 'bg-blue-50', success: 'bg-green-50', warning: 'bg-yellow-50'},
+        borderColors: {error: 'border-red-500', info: 'border-blue-500', success: 'border-green-500', warning: 'border-yellow-500'}
+      }"
     >
-      <div
-        role="alert"
-        class="rounded border-s-4 p-4 border"
-        :class="`border-${colors[level]}-500 bg-${colors[level]}-50`"
-      >
+      <template x-for="(toast, index) in $store.toasts.list" :key="toast.id">
         <div
-          class="flex items-center gap-2"
-          :class="`text-${colors[level]}-800`"
+          x-data="{ visible: false }"
+          x-init="$nextTick(() => { visible = true })"
+          x-show="visible && toast.visible"
+          role="alert"
+          class="rounded border-s-4 border mb-2 cursor-pointer"
+          :class="`${borderColors[toast.level]} ${bgColors[toast.level]}`"
+          @click="$store.toasts.destroyToast(index)"
+          x-transition:enter="transition-transform transition-opacity ease-out duration-300"
+          x-transition:enter-start="opacity-0 transform -translate-y-2"
+          x-transition:enter-end="opacity-100 transform translate-y-0"
+          x-transition:leave="transition ease-in duration-300"
+          x-transition:leave-end="opacity-0 transform -translate-y-2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            class="h-5 w-5"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-              clip-rule="evenodd"
-            />
-          </svg>
+          <div class="p-4 pb-0 flex flex-col gap-2">
+            <div
+              class="flex items-center gap-2"
+              :class="titleColors[toast.level]"
+            >
+              <svg
+                x-show="toast.level === 'success'"
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                />
+              </svg>
 
-          <strong class="block font-medium" x-text="levelTitle"></strong>
+              <svg
+                x-show="toast.level === 'warning'"
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+
+              <svg
+                x-show="toast.level === 'error'"
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <svg
+                x-show="toast.level === 'info'"
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+
+              <strong
+                class="block font-medium"
+                x-text="toast.levelTitle"
+              ></strong>
+            </div>
+
+            <p
+              class="text-sm"
+              :class="messageColors[toast.level]"
+              x-text="toast.message"
+            ></p>
+          </div>
+
+          <div class="pl-2 pr-2">
+          <progress
+            x-data="{ value: 100, colors: {error: 'progress-unfilled:bg-red-100 progress-filled:bg-red-300', info: 'progress-unfilled:bg-blue-100 progress-filled:bg-blue-300', success: 'progress-unfilled:bg-green-100 progress-filled:bg-green-300', warning: 'progress-unfilled:bg-yellow-100 progress-filled:bg-yellow-300'}}"
+            x-init="
+              setInterval(()=> {
+                if (value == 0){
+                  clearInterval();
+                } else {
+                  value-=1
+                }
+              }, toast.timeOut / 100)"
+            max="100"
+            :value="value"
+            class="w-full h-1 progress-unfilled:rounded progress-filled:rounded"
+            :class="colors[toast.level]"
+          ></progress>
         </div>
-
-        <p
-          class="mt-2 text-sm"
-          :class="`text-${colors[level]}-700`"
-          x-text="text"
-        ></p>
-      </div>
+        </div>
+      </template>
     </div>
+
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.store("toasts", {
+          counter: 0,
+          list: [],
+          createToast(toast, timer = 5000) {
+            const index = this.list.length;
+            let totalVisible =
+              this.list.filter((toast) => {
+                return toast.visible;
+              }).length + 1;
+            this.list.push({
+              id: this.counter++,
+              ...toast,
+              timeOut: timer * totalVisible,
+              visible: true,
+            });
+
+            setTimeout(() => {
+              this.destroyToast(index);
+            }, timer * totalVisible);
+          },
+          destroyToast(index) {
+            this.list[index].visible = false;
+          },
+        });
+      });
+
+      const levelTimings = {
+        error: 5000,
+        info: 3000,
+        success: 3000,
+        warning: 5000,
+      };
+
+      document.body.addEventListener("show-toast", (event) => {
+        Alpine.store("toasts").createToast(event.detail, levelTimings[event.detail.level]);
+      });
+    </script>
 
     <script
       defer

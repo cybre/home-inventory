@@ -3,13 +3,13 @@
 <div class="grid gap-2 lg:gap-4 md:grid-cols-2 2xl:grid-cols-3" hx-boost="true">
   {{ range $household := .Households }}
     <div
-      class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300"
+      class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300 min-h-72"
       id="household-{{ .HouseholdID }}"
     >
-      {{ if eq $.PageData.Editing.HouseholdID $household.HouseholdID }}
+      {{ if and $.PageData.Editing (eq $.PageData.Editing.HouseholdID $household.HouseholdID) }}
         {{ template "household_edit" $household }} 
       {{ else }}
-        {{ template "household_card" $household }}
+        {{ template "household_card" dict "Household" $household "EditingRoom" $.PageData.EditingRoom }}
       {{end}}
     </div>
   {{ end }}

@@ -3,7 +3,7 @@
     Edit Household
   </h3>
 </div>
-<form action="/households/{{ .HouseholdID }}/edit" method="PUT" hx-action="/households/{{ .HouseholdID }}/edit" hx-method="PUT" hx-target="#household-{{ .HouseholdID }}" hx-push-url="false">
+<form action="/households/{{ .HouseholdID }}/edit" method="POST" hx-action="/households/{{ .HouseholdID }}/edit" hx-method="POST" hx-target="#household-{{ .HouseholdID }}" hx-push-url="false">
   <div class="p-6 pt-2 space-y-4">
     <div class="space-y-2">
       <label

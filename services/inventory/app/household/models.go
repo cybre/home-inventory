@@ -1,15 +1,17 @@
 package household
 
+import "github.com/gocql/gocql"
+
 type UserHouseholdRoomModel struct {
-	HouseholdID string `cql:"household_id"`
-	RoomID      string `cql:"room_id"`
-	Name        string `cql:"name"`
-	ItemCount   int    `cql:"item_count"`
+	HouseholdID gocql.UUID `cql:"household_id"`
+	RoomID      gocql.UUID `cql:"room_id"`
+	Name        string     `cql:"name"`
+	ItemCount   int        `cql:"item_count"`
 }
 
 type UserHouseholdModel struct {
 	UserID      string
-	HouseholdID string
+	HouseholdID gocql.UUID
 	Name        string
 	Location    string
 	Description string

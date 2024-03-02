@@ -13,14 +13,14 @@ const (
 	INFO    = "info"
 	SUCCESS = "success"
 	WARNING = "warning"
-	DANGER  = "danger"
+	ERROR   = "error"
 )
 
 var levelTitles = map[string]string{
 	INFO:    "Info",
 	SUCCESS: "Success",
 	WARNING: "Warning",
-	DANGER:  "Error",
+	ERROR:   "Error",
 }
 
 type Toast struct {
@@ -45,8 +45,8 @@ func Warning(message string) Toast {
 	return New(WARNING, message)
 }
 
-func Danger(message string) Toast {
-	return New(DANGER, message)
+func Error(message string) Toast {
+	return New(ERROR, message)
 }
 
 func (t Toast) Error() string {
@@ -68,7 +68,7 @@ func (t Toast) SetHXTriggerHeader(c echo.Context) {
 	jsonData, err := t.jsonify()
 	if err != nil {
 		logging.FromContext(c.Request().Context()).Warn("failed to jsonify toast", slog.Any("error", err))
-		c.Response().Header().Set("HX-Trigger", "{\"show-toast\": {\"level\":\"danger\",\"message\":\"There has been an unexpected error\"}}")
+		c.Response().Header().Set("HX-Trigger", "{\"show-toast\": {\"level\":\"error\",\"message\":\"There has been an unexpected error\"}}")
 		return
 	}
 

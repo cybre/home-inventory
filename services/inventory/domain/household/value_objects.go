@@ -101,6 +101,32 @@ func (r Rooms) FindByName(name RoomName) (Room, bool) {
 	return Room{}, false
 }
 
+func (r Rooms) Update(room Room) error {
+	if _, ok := r.Get(room.ID); !ok {
+		return fmt.Errorf("room with ID %s does not exist", room.ID)
+	}
+
+	if _, ok := r.Without(room.ID).FindByName(room.Name); ok {
+		return fmt.Errorf("room with name %s already exists", room.Name)
+	}
+
+	r[room.ID] = room
+
+	return nil
+}
+
+func (r Rooms) Without(id RoomID) Rooms {
+	rooms := make(Rooms)
+
+	for roomID, room := range r {
+		if roomID != id {
+			rooms[roomID] = room
+		}
+	}
+
+	return rooms
+}
+
 type Room struct {
 	ID    RoomID
 	Name  RoomName
@@ -122,6 +148,19 @@ func NewRoom(id, name string) (Room, error) {
 		ID:    roomID,
 		Name:  roomName,
 		Items: make(Items),
+	}, nil
+}
+
+func (r Room) Update(name string) (Room, error) {
+	roomName, err := NewRoomName(name)
+	if err != nil {
+		return Room{}, err
+	}
+
+	return Room{
+		ID:    r.ID,
+		Name:  roomName,
+		Items: r.Items,
 	}, nil
 }
 
@@ -189,6 +228,10 @@ func (i Items) Get(id ItemID) (Item, bool) {
 	}
 
 	return item, true
+}
+
+func (i Items) Count() int {
+	return len(i)
 }
 
 type Item struct {

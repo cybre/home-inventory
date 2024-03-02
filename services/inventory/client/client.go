@@ -158,3 +158,61 @@ func (c InventoryClient) GetUserHousehold(ctx context.Context, userId, household
 
 	return household, nil
 }
+
+type UpdateRoomRequest struct {
+	UserID      string `json:"-"`
+	HouseholdID string `json:"-"`
+	RoomID      string `json:"-"`
+	Name        string `json:"name"`
+}
+
+func (c InventoryClient) UpdateRoom(ctx context.Context, room UpdateRoomRequest) error {
+	resp, err := requestbuilder.New(http.MethodPut, c.address+shared.UserHouseholdRoomRoute).
+		WithPathParam(shared.UserHouseholdsUserIDParam, room.UserID).
+		WithPathParam(shared.UserHouseholdsHouseholdIDParam, room.HouseholdID).
+		WithPathParam(shared.UserHouseholdsRoomIDParam, room.RoomID).
+		WithBody(room).
+		WithInvalidateCache(
+			c.cache,
+			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, room.UserID, room.HouseholdID),
+			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, room.UserID),
+		).
+		WithRetry().
+		Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return echo.NewHTTPError(resp.StatusCode, "failed to update room")
+	}
+
+	return nil
+}
+
+func (c InventoryClient) GetUserHouseholdRoom(ctx context.Context, userID, householdID, roomID string) (shared.UserHouseholdRoom, error) {
+	resp, err := requestbuilder.
+		New(http.MethodGet, c.address+shared.UserHouseholdRoomRoute).
+		WithPathParam(shared.UserHouseholdsUserIDParam, userID).
+		WithPathParam(shared.UserHouseholdsHouseholdIDParam, householdID).
+		WithPathParam(shared.UserHouseholdsRoomIDParam, roomID).
+		WithHeader("Accept", "application/json").
+		WithRetry().
+		Do(ctx)
+	if err != nil {
+		return shared.UserHouseholdRoom{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return shared.UserHouseholdRoom{}, echo.NewHTTPError(resp.StatusCode, "failed to get room")
+	}
+
+	defer resp.Body.Close()
+
+	var room shared.UserHouseholdRoom
+	if err := json.NewDecoder(resp.Body).Decode(&room); err != nil {
+		return shared.UserHouseholdRoom{}, err
+	}
+
+	return room, nil
+}

@@ -12,7 +12,7 @@ CREATE TABLE user_households (
   location TEXT,
   description TEXT,
   item_count INT,
-  rooms LIST<FROZEN<user_households_room>>,
+  rooms MAP<TEXT, FROZEN<user_households_room>>,
   timestamp TIMESTAMP,
   PRIMARY KEY (user_id, household_id)
 );

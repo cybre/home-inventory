@@ -10,14 +10,14 @@ import (
 )
 
 func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService, validate *validator.Validate) {
-	// e.POST("/household/:householdId/rooms", eh.NewValidateHandler(addHouseholdRoomHandler(householdService), validate))
-	// e.POST("/household/:householdId/rooms/:roomID/items", eh.NewValidateHandler(addItemHandler(householdService), validate))
-	// e.POST("/household/:householdId/rooms/:roomID/items/:itemID", eh.NewValidateHandler(updateItemHandler(householdService), validate))
-
 	e.GET(shared.UserHouseholdsRoute, getUserHouseholdsHandler(householdService))
 	e.POST(shared.UserHouseholdsRoute, eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
 	e.GET(shared.UserHouseholdRoute, getUserHouseholdHandler(householdService))
 	e.PUT(shared.UserHouseholdRoute, eh.NewValidateHandler(updateHouseholdHandler(householdService), validate))
+
+	e.POST(shared.UserHouseholdRoomsRoute, eh.NewValidateHandler(addRoomHandler(householdService), validate))
+	e.GET(shared.UserHouseholdRoomRoute, getUserHouseholdRoomHandler(householdService))
+	e.PUT(shared.UserHouseholdRoomRoute, eh.NewValidateHandler(updateRoomHandler(householdService), validate))
 }
 
 func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared.CreateHouseholdCommandData] {
@@ -90,6 +90,41 @@ func getUserHouseholdHandler(householdService HouseholdService) echo.HandlerFunc
 func updateHouseholdHandler(householdService HouseholdService) eh.Handler[shared.UpdateHouseholdCommandData] {
 	return func(c echo.Context, data shared.UpdateHouseholdCommandData) error {
 		if err := householdService.UpdateHousehold(c.Request().Context(), data); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+func getUserHouseholdRoomHandler(householdService HouseholdService) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		userId := c.Param("userId")
+		householdId := c.Param("householdId")
+		roomId := c.Param("roomId")
+
+		household, err := householdService.GetUserHouseholdRoom(c.Request().Context(), userId, householdId, roomId)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, household)
+	}
+}
+
+func addRoomHandler(householdService HouseholdService) eh.Handler[shared.AddRoomCommandData] {
+	return func(c echo.Context, data shared.AddRoomCommandData) error {
+		if err := householdService.AddRoom(c.Request().Context(), data); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+func updateRoomHandler(householdService HouseholdService) eh.Handler[shared.UpdateRoomCommandData] {
+	return func(c echo.Context, data shared.UpdateRoomCommandData) error {
+		if err := householdService.UpdateRoom(c.Request().Context(), data); err != nil {
 			return err
 		}
 

@@ -18,7 +18,15 @@ type UpdateHouseholdCommandData struct {
 
 type AddRoomCommandData struct {
 	HouseholdID string `param:"householdId" validate:"required,uuid4"`
+	UserID      string `param:"userId" validate:"required"`
 	RoomID      string `json:"roomId" validate:"required,uuid4"`
+	Name        string `json:"name" validate:"required,min=3,max=50"`
+}
+
+type UpdateRoomCommandData struct {
+	HouseholdID string `param:"householdId" validate:"required,uuid4"`
+	UserID      string `param:"userId" validate:"required"`
+	RoomID      string `param:"roomId" validate:"required,uuid4"`
 	Name        string `json:"name" validate:"required,min=3,max=50"`
 }
 

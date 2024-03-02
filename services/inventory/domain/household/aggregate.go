@@ -38,6 +38,8 @@ func (a *HouseholdAgregate) ApplyEvent(event es.EventData) {
 		a.applyHouseholdUpdatedEvent(e)
 	case RoomAddedEvent:
 		a.applyRoomAddedEvent(e)
+	case RoomUpdatedEvent:
+		a.applyRoomUpdatedEvent(e)
 	case ItemAddedEvent:
 		a.applyItemAddedEvent(e)
 	case ItemUpdatedEvent:
@@ -55,6 +57,8 @@ func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Comman
 		return a.handleUpdateHouseholdCommand(ctx, c)
 	case AddRoomCommand:
 		return a.handleAddRoomCommand(ctx, c)
+	case UpdateRoomCommand:
+		return a.handleUpdateRoomCommand(ctx, c)
 	case AddItemCommand:
 		return a.handleAddItemCommand(ctx, c)
 	case UpdateItemCommand:
@@ -143,8 +147,38 @@ func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command Ad
 
 	return c.Events(RoomAddedEvent{
 		HouseholdID: a.AggregateID().String(),
+		UserID:      a.UserID.String(),
 		RoomID:      newRoom.ID.String(),
 		Name:        newRoom.Name.String(),
+	})
+}
+
+func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command UpdateRoomCommand) ([]es.EventData, error) {
+	if a.Version() == initialAggregateVersion {
+		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
+	}
+
+	roomID, err := NewRoomID(command.RoomID)
+	if err != nil {
+		return nil, err
+	}
+
+	room, ok := a.Rooms.Get(roomID)
+	if !ok {
+		return nil, fmt.Errorf("room with ID %s does not exist", roomID)
+	}
+
+	room, err = room.Update(command.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Events(RoomUpdatedEvent{
+		HouseholdID: a.AggregateID().String(),
+		UserID:      a.UserID.String(),
+		RoomID:      room.ID.String(),
+		Name:        room.Name.String(),
+		ItemCount:   room.Items.Count(),
 	})
 }
 
@@ -239,6 +273,15 @@ func (a *HouseholdAgregate) applyHouseholdUpdatedEvent(event HouseholdUpdatedEve
 func (a *HouseholdAgregate) applyRoomAddedEvent(event RoomAddedEvent) {
 	newRoom, _ := NewRoom(event.RoomID, event.Name)
 	a.Rooms.Add(newRoom)
+}
+
+func (a *HouseholdAgregate) applyRoomUpdatedEvent(event RoomUpdatedEvent) {
+	roomID, _ := NewRoomID(event.RoomID)
+	room, _ := a.Rooms.Get(roomID)
+
+	room, _ = room.Update(event.Name)
+
+	a.Rooms.Update(room)
 }
 
 func (a *HouseholdAgregate) applyItemAddedEvent(event ItemAddedEvent) {

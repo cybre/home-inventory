@@ -9,17 +9,18 @@ import (
 	"github.com/cybre/home-inventory/services/inventory/shared"
 )
 
-type UserHouseholdGetter interface {
+type UserHouseholdRepo interface {
 	GetUserHouseholds(ctx context.Context, userID string) ([]UserHouseholdModel, error)
 	GetUserHousehold(ctx context.Context, userID, householdID string) (UserHouseholdModel, error)
+	GetRoom(ctx context.Context, userID, householdID, roomID string) (UserHouseholdRoomModel, error)
 }
 
 type HouseholdService struct {
 	commandBus common.CommandBus
-	repository UserHouseholdGetter
+	repository UserHouseholdRepo
 }
 
-func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdGetter) *HouseholdService {
+func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdRepo) *HouseholdService {
 	return &HouseholdService{
 		commandBus: commandBus,
 		repository: repository,
@@ -49,6 +50,16 @@ func (s HouseholdService) UpdateHousehold(ctx context.Context, data shared.Updat
 func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomCommandData) error {
 	return s.commandBus.Dispatch(ctx, household.AddRoomCommand{
 		HouseholdID: data.HouseholdID,
+		UserID:      data.UserID,
+		RoomID:      data.RoomID,
+		Name:        data.Name,
+	})
+}
+
+func (s HouseholdService) UpdateRoom(ctx context.Context, data shared.UpdateRoomCommandData) error {
+	return s.commandBus.Dispatch(ctx, household.UpdateRoomCommand{
+		HouseholdID: data.HouseholdID,
+		UserID:      data.UserID,
 		RoomID:      data.RoomID,
 		Name:        data.Name,
 	})
@@ -94,6 +105,15 @@ func (s HouseholdService) GetUserHousehold(ctx context.Context, userID, househol
 	return toSharedUserHousehold(household), nil
 }
 
+func (s HouseholdService) GetUserHouseholdRoom(ctx context.Context, userID, householdID, roomID string) (shared.UserHouseholdRoom, error) {
+	room, err := s.repository.GetRoom(ctx, userID, householdID, roomID)
+	if err != nil {
+		return shared.UserHouseholdRoom{}, err
+	}
+
+	return toSharedUserHouseholdRoom(0, room), nil
+}
+
 func toSharedUserHouseholds(households []UserHouseholdModel) []shared.UserHousehold {
 	sharedHouseholds := make([]shared.UserHousehold, len(households))
 	for i, household := range households {
@@ -106,7 +126,7 @@ func toSharedUserHouseholds(households []UserHouseholdModel) []shared.UserHouseh
 func toSharedUserHousehold(household UserHouseholdModel) shared.UserHousehold {
 	return shared.UserHousehold{
 		UserID:      household.UserID,
-		HouseholdID: household.HouseholdID,
+		HouseholdID: household.HouseholdID.String(),
 		Name:        household.Name,
 		Location:    household.Location,
 		Description: household.Description,
@@ -118,8 +138,8 @@ func toSharedUserHousehold(household UserHouseholdModel) shared.UserHousehold {
 
 func toSharedUserHouseholdRoom(i uint, room UserHouseholdRoomModel) shared.UserHouseholdRoom {
 	return shared.UserHouseholdRoom{
-		HouseholdID: room.HouseholdID,
-		RoomID:      room.RoomID,
+		HouseholdID: room.HouseholdID.String(),
+		RoomID:      room.RoomID.String(),
 		Name:        room.Name,
 		ItemCount:   room.ItemCount,
 	}

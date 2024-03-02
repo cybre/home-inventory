@@ -22,3 +22,12 @@ func MapWithError[S ~[]E, E, R any](s S, f func(uint, E) (R, error)) ([]R, error
 
 	return result, nil
 }
+
+func Values[M ~map[K]V, K comparable, V any](m M) []V {
+	values := make([]V, 0, len(m))
+	for _, v := range m {
+		values = append(values, v)
+	}
+
+	return values
+}

@@ -1,4 +1,4 @@
-{{ $household := . }}
+{{ $household := .Household }}
 
 <a
   href="/households/{{ $household.HouseholdID }}/edit"
@@ -44,16 +44,28 @@
     <polyline points="9 22 9 12 15 12 15 22"></polyline>
   </svg>
   <div class="flex-col text-center gap-0 max-w-full">
-    <h3 class="whitespace-nowrap tracking-tight text-3xl font-bold text-ellipsis overflow-hidden">
+    <h3
+      class="whitespace-nowrap tracking-tight text-3xl font-bold text-ellipsis overflow-hidden"
+    >
       {{ $household.Name }}
     </h3>
     <span class="text-muted-foreground">{{ $household.Location }}</span>
   </div>
 </a>
 <div class="p-2 lg:p-4 xl:p-6">
-  <div class="grid gap-2 lg:gap-4 xl:gap-6 grid-cols-2 lg:grid-cols-3">
-    {{ range $room := $household.Rooms }} {{ template "room_card" $room }} {{
-    end }}
+  <div class="grid gap-2 lg:gap-4 xl:gap-6 grid-cols-2 lg:grid-cols-2">
+    {{ range $room := $household.Rooms }}
+    <div
+      class="relative min-h-32 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-gray-300 transition-colors duration-150"
+      id="room-{{ $room.RoomID }}"
+    >
+      {{ if and $.EditingRoom (eq $.EditingRoom.RoomID $room.RoomID) }}
+        {{ template "room_edit" $room }} 
+      {{ else }}
+        {{ template "room_card" $room }}
+      {{end}}
+    </div>
+    {{ end }}
     <div
       class="rounded-lg border-2 border-dashed bg-card text-card-foreground flex justify-center items-center group cursor-pointer hover:border-gray-300 transition-colors duration-150 p-4 min-h-32"
     >

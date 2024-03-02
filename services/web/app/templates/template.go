@@ -83,7 +83,5 @@ func (t *Renderer) Render(w io.Writer, name string, pageData interface{}, c echo
 		}
 	}
 
-	fmt.Printf("opts: %v\n", opts)
-
 	return t.r.HTML(w, http.StatusOK, name, pageData, opts...)
 }
