@@ -38,6 +38,8 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 		}
 
 		te.SetHXTriggerHeader(c)
+
+		e.DefaultHTTPErrorHandler(err, c)
 	}
 
 	e.Renderer = templates.New()
