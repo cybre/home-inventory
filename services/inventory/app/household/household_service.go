@@ -130,9 +130,9 @@ func toSharedUserHousehold(household UserHouseholdModel) shared.UserHousehold {
 		Name:        household.Name,
 		Location:    household.Location,
 		Description: household.Description,
-		ItemCount:   household.ItemCount,
 		Rooms:       utils.Map(household.Rooms, toSharedUserHouseholdRoom),
 		Timestamp:   household.Timestamp,
+		Order:       household.Order,
 	}
 }
 
@@ -141,6 +141,7 @@ func toSharedUserHouseholdRoom(i uint, room UserHouseholdRoomModel) shared.UserH
 		HouseholdID: room.HouseholdID.String(),
 		RoomID:      room.RoomID.String(),
 		Name:        room.Name,
-		ItemCount:   room.ItemCount,
+		Timestamp:   room.Timestamp,
+		Order:       room.Order,
 	}
 }

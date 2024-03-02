@@ -6,13 +6,14 @@ import (
 
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	"github.com/cybre/home-inventory/services/inventory/domain/household"
+	"github.com/gocql/gocql"
 )
 
 type HouseholdRepo interface {
-	InsertHousehold(ctx context.Context, userId string, householdId string, name string, location string, description string) error
-	UpdateHousehold(ctx context.Context, userId string, householdId string, name string, location string, description string) error
+	InsertHousehold(ctx context.Context, model UserHouseholdModel) error
+	UpdateHousehold(ctx context.Context, model UserHouseholdModel) error
 
-	UpsertRoom(ctx context.Context, userId string, householdId string, roomId string, name string, itemCount int) error
+	UpsertRoom(ctx context.Context, userId string, model UserHouseholdRoomModel) error
 }
 
 type UserHouseholdProjector struct {
@@ -54,7 +55,20 @@ func (p UserHouseholdProjector) Name() string {
 }
 
 func (p UserHouseholdProjector) handleHouseholdCreatedEvent(ctx context.Context, e household.HouseholdCreatedEvent) error {
-	if err := p.repository.InsertHousehold(ctx, e.UserID, e.HouseholdID, e.Name, e.Location, e.Description); err != nil {
+	householdUUID, err := gocql.ParseUUID(e.HouseholdID)
+	if err != nil {
+		return fmt.Errorf("failed to parse household ID: %w", err)
+	}
+
+	if err := p.repository.InsertHousehold(ctx, UserHouseholdModel{
+		UserID:      e.UserID,
+		HouseholdID: householdUUID,
+		Name:        e.Name,
+		Location:    e.Location,
+		Description: e.Description,
+		Order:       e.Order,
+		Timestamp:   e.Timestamp,
+	}); err != nil {
 		return fmt.Errorf("failed to insert household: %w", err)
 	}
 
@@ -62,7 +76,19 @@ func (p UserHouseholdProjector) handleHouseholdCreatedEvent(ctx context.Context,
 }
 
 func (p UserHouseholdProjector) handleHouseholdUpdatedEvent(ctx context.Context, e household.HouseholdUpdatedEvent) error {
-	if err := p.repository.UpdateHousehold(ctx, e.UserID, e.HouseholdID, e.Name, e.Location, e.Description); err != nil {
+	householdUUID, err := gocql.ParseUUID(e.HouseholdID)
+	if err != nil {
+		return fmt.Errorf("failed to parse household ID: %w", err)
+	}
+
+	if err := p.repository.UpdateHousehold(ctx, UserHouseholdModel{
+		UserID:      e.UserID,
+		HouseholdID: householdUUID,
+		Name:        e.Name,
+		Location:    e.Location,
+		Description: e.Description,
+		Timestamp:   e.Timestamp,
+	}); err != nil {
 		return fmt.Errorf("failed to update household: %w", err)
 	}
 
@@ -70,7 +96,23 @@ func (p UserHouseholdProjector) handleHouseholdUpdatedEvent(ctx context.Context,
 }
 
 func (p UserHouseholdProjector) handleRoomAddedEvent(ctx context.Context, e household.RoomAddedEvent) error {
-	if err := p.repository.UpsertRoom(ctx, e.UserID, e.HouseholdID, e.RoomID, e.Name, 0); err != nil {
+	householdUUID, err := gocql.ParseUUID(e.HouseholdID)
+	if err != nil {
+		return fmt.Errorf("failed to parse household ID: %w", err)
+	}
+
+	roomUUID, err := gocql.ParseUUID(e.RoomID)
+	if err != nil {
+		return fmt.Errorf("failed to parse room ID: %w", err)
+	}
+
+	if err := p.repository.UpsertRoom(ctx, e.UserID, UserHouseholdRoomModel{
+		HouseholdID: householdUUID,
+		RoomID:      roomUUID,
+		Name:        e.Name,
+		Order:       e.Order,
+		Timestamp:   e.Timestamp,
+	}); err != nil {
 		return fmt.Errorf("failed to add room: %w", err)
 	}
 
@@ -78,7 +120,23 @@ func (p UserHouseholdProjector) handleRoomAddedEvent(ctx context.Context, e hous
 }
 
 func (p UserHouseholdProjector) handleRoomUpdatedEvent(ctx context.Context, e household.RoomUpdatedEvent) error {
-	if err := p.repository.UpsertRoom(ctx, e.UserID, e.HouseholdID, e.RoomID, e.Name, e.ItemCount); err != nil {
+	householdUUID, err := gocql.ParseUUID(e.HouseholdID)
+	if err != nil {
+		return fmt.Errorf("failed to parse household ID: %w", err)
+	}
+
+	roomUUID, err := gocql.ParseUUID(e.RoomID)
+	if err != nil {
+		return fmt.Errorf("failed to parse room ID: %w", err)
+	}
+
+	if err := p.repository.UpsertRoom(ctx, e.UserID, UserHouseholdRoomModel{
+		HouseholdID: householdUUID,
+		RoomID:      roomUUID,
+		Name:        e.Name,
+		Order:       e.Order,
+		Timestamp:   e.Timestamp,
+	}); err != nil {
 		return fmt.Errorf("failed to update room: %w", err)
 	}
 

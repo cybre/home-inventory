@@ -3,8 +3,10 @@ package household
 import (
 	"context"
 	"fmt"
+	"time"
 
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
+	"github.com/cybre/home-inventory/services/inventory/domain/common"
 	c "github.com/cybre/home-inventory/services/inventory/domain/common"
 )
 
@@ -13,20 +15,31 @@ const (
 	initialAggregateVersion                  = 0
 )
 
+type HouseholdService interface {
+	GetHouseholdCount(ctx context.Context, userID common.UserID) (uint, error)
+	CheckHouseholdNameAvailability(ctx context.Context, userID common.UserID, name HouseholdName) (bool, error)
+}
+
 type HouseholdAgregate struct {
 	es.AggregateContext
+
+	householdService HouseholdService
 
 	UserID      c.UserID
 	Name        HouseholdName
 	Location    HouseholdLocation
 	Description HouseholdDescription
+	Order       HouseholdOrder
 
 	Rooms Rooms
 }
 
-func NewHouseholdAggregate(aggregateContext es.AggregateContext) es.AggregateRoot {
-	return &HouseholdAgregate{
-		AggregateContext: aggregateContext,
+func NewHouseholdAggregate(householdService HouseholdService) es.AggregateRootFactoryFunc {
+	return func(aggregateContext es.AggregateContext) es.AggregateRoot {
+		return &HouseholdAgregate{
+			AggregateContext: aggregateContext,
+			householdService: householdService,
+		}
 	}
 }
 
@@ -83,6 +96,14 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 		return nil, err
 	}
 
+	nameAvailable, err := a.householdService.CheckHouseholdNameAvailability(ctx, userId, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check household name availability: %w", err)
+	}
+	if !nameAvailable {
+		return nil, fmt.Errorf("household with name [%s] already exists", command.Name)
+	}
+
 	location, err := NewHouseholdLocation(command.Location)
 	if err != nil {
 		return nil, err
@@ -93,12 +114,19 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 		return nil, err
 	}
 
+	householdCount, err := a.householdService.GetHouseholdCount(ctx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get household count: %w", err)
+	}
+
 	return c.Events(HouseholdCreatedEvent{
 		HouseholdID: a.AggregateID().String(),
 		UserID:      userId.String(),
 		Name:        name.String(),
 		Location:    location.String(),
 		Description: description.String(),
+		Order:       householdCount + 1,
+		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
@@ -128,6 +156,7 @@ func (a *HouseholdAgregate) handleUpdateHouseholdCommand(ctx context.Context, co
 		Name:        name.String(),
 		Location:    location.String(),
 		Description: description.String(),
+		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
@@ -136,7 +165,7 @@ func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command Ad
 		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
 	}
 
-	newRoom, err := NewRoom(command.RoomID, command.Name)
+	newRoom, err := NewRoom(command.RoomID, command.Name, uint(a.Rooms.Count()+1))
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +179,8 @@ func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command Ad
 		UserID:      a.UserID.String(),
 		RoomID:      newRoom.ID.String(),
 		Name:        newRoom.Name.String(),
+		Order:       newRoom.Order.Uint(),
+		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
@@ -178,7 +209,8 @@ func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command
 		UserID:      a.UserID.String(),
 		RoomID:      room.ID.String(),
 		Name:        room.Name.String(),
-		ItemCount:   room.Items.Count(),
+		Order:       room.Order.Uint(),
+		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
@@ -261,6 +293,7 @@ func (a *HouseholdAgregate) applyHouseholdCreatedEvent(event HouseholdCreatedEve
 	a.Name, _ = NewHouseholdName(event.Name)
 	a.Location, _ = NewHouseholdLocation(event.Location)
 	a.Description, _ = NewHouseholdDescription(event.Description)
+	a.Order, _ = NewHouseholdOrder(event.Order)
 	a.Rooms = NewRooms()
 }
 
@@ -271,7 +304,7 @@ func (a *HouseholdAgregate) applyHouseholdUpdatedEvent(event HouseholdUpdatedEve
 }
 
 func (a *HouseholdAgregate) applyRoomAddedEvent(event RoomAddedEvent) {
-	newRoom, _ := NewRoom(event.RoomID, event.Name)
+	newRoom, _ := NewRoom(event.RoomID, event.Name, event.Order)
 	a.Rooms.Add(newRoom)
 }
 

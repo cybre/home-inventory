@@ -65,6 +65,16 @@ func (d HouseholdDescription) String() string {
 	return string(d)
 }
 
+type HouseholdOrder uint
+
+func NewHouseholdOrder(order uint) (HouseholdOrder, error) {
+	return HouseholdOrder(order), nil
+}
+
+func (o HouseholdOrder) Uint() uint {
+	return uint(o)
+}
+
 type Rooms map[RoomID]Room
 
 func NewRooms() Rooms {
@@ -127,13 +137,18 @@ func (r Rooms) Without(id RoomID) Rooms {
 	return rooms
 }
 
+func (r Rooms) Count() int {
+	return len(r)
+}
+
 type Room struct {
 	ID    RoomID
 	Name  RoomName
 	Items Items
+	Order RoomOrder
 }
 
-func NewRoom(id, name string) (Room, error) {
+func NewRoom(id, name string, order uint) (Room, error) {
 	roomID, err := NewRoomID(id)
 	if err != nil {
 		return Room{}, err
@@ -144,10 +159,16 @@ func NewRoom(id, name string) (Room, error) {
 		return Room{}, err
 	}
 
+	roomOrder, err := NewRoomOrder(order)
+	if err != nil {
+		return Room{}, err
+	}
+
 	return Room{
 		ID:    roomID,
 		Name:  roomName,
 		Items: make(Items),
+		Order: roomOrder,
 	}, nil
 }
 
@@ -161,6 +182,7 @@ func (r Room) Update(name string) (Room, error) {
 		ID:    r.ID,
 		Name:  roomName,
 		Items: r.Items,
+		Order: r.Order,
 	}, nil
 }
 
@@ -193,6 +215,16 @@ func NewRoomName(name string) (RoomName, error) {
 
 func (n RoomName) String() string {
 	return string(n)
+}
+
+type RoomOrder uint
+
+func NewRoomOrder(order uint) (RoomOrder, error) {
+	return RoomOrder(order), nil
+}
+
+func (o RoomOrder) Uint() uint {
+	return uint(o)
 }
 
 type Items map[ItemID]Item

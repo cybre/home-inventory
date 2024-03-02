@@ -70,7 +70,6 @@ func createRoomHandler(roomCreator RoomCreator) echo.HandlerFunc {
 				HouseholdID: request.HouseholdID,
 				RoomID:      request.RoomID,
 				Name:        request.Name,
-				ItemCount:   0,
 			})
 		}
 

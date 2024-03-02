@@ -3,7 +3,7 @@ package household
 import (
 	"context"
 	"fmt"
-	"time"
+	"slices"
 
 	"github.com/cybre/home-inventory/internal/utils"
 	"github.com/gocql/gocql"
@@ -17,50 +17,61 @@ func NewUserHouseholdRepository(db *gocql.Session) *UserHouseholdRepository {
 	return &UserHouseholdRepository{db: db}
 }
 
-func (r UserHouseholdRepository) InsertHousehold(ctx context.Context, userId string, householdId string, name string, location string, description string) error {
-	householdUUID, err := gocql.ParseUUID(householdId)
-	if err != nil {
-		return fmt.Errorf("invalid household ID: %s", householdId)
-	}
-
-	return r.db.Query("INSERT INTO user_households (user_id, household_id, name, location, description, item_count, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)", userId, householdUUID, name, location, description, 0, time.Now().UnixMilli()).WithContext(ctx).Exec()
+func (r UserHouseholdRepository) InsertHousehold(ctx context.Context, model UserHouseholdModel) error {
+	return r.db.Query("INSERT INTO user_households (user_id, household_id, name, location, description, tstamp, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)", model.UserID, model.HouseholdID, model.Name, model.Location, model.Description, model.Timestamp, model.Order).WithContext(ctx).Exec()
 }
 
-func (r UserHouseholdRepository) UpdateHousehold(ctx context.Context, userId string, householdId string, name string, location string, description string) error {
-	householdUUID, err := gocql.ParseUUID(householdId)
-	if err != nil {
-		return fmt.Errorf("invalid household ID: %s", householdId)
-	}
-
-	return r.db.Query("UPDATE user_households SET name = ?, location = ?, description = ? WHERE user_id = ? AND household_id = ?", name, location, description, userId, householdUUID).WithContext(ctx).Exec()
+func (r UserHouseholdRepository) UpdateHousehold(ctx context.Context, model UserHouseholdModel) error {
+	return r.db.Query("UPDATE user_households SET name = ?, location = ?, description = ?, tstamp = ? WHERE user_id = ? AND household_id = ?", model.Name, model.Location, model.Description, model.Timestamp, model.UserID, model.HouseholdID).WithContext(ctx).Exec()
 }
 
 func (r UserHouseholdRepository) GetUserHouseholds(ctx context.Context, userId string) ([]UserHouseholdModel, error) {
 	var householdId gocql.UUID
 	var name, location, description string
-	var item_count int
 	var timestamp int64
-	var rooms map[gocql.UUID]UserHouseholdRoomModel
-	iter := r.db.Query("SELECT household_id, name, location, description, item_count, rooms, timestamp FROM user_households WHERE user_id = ?", userId).WithContext(ctx).Iter()
+	var order uint
+	var rooms map[string]UserHouseholdRoomModel
+	iter := r.db.Query("SELECT household_id, name, location, description, rooms, tstamp, sort_order FROM user_households WHERE user_id = ?", userId).WithContext(ctx).Iter()
 	defer iter.Close()
 
 	households := make([]UserHouseholdModel, 0)
-	for iter.Scan(&householdId, &name, &location, &description, &item_count, &rooms, &timestamp) {
+	for iter.Scan(&householdId, &name, &location, &description, &rooms, &timestamp, &order) {
+		roomList := utils.Values(rooms)
+		slices.SortFunc(roomList, func(a, b UserHouseholdRoomModel) int {
+			if a.Order < b.Order {
+				return -1
+			}
+			if a.Order > b.Order {
+				return 1
+			}
+			return 0
+		})
+
 		households = append(households, UserHouseholdModel{
 			UserID:      userId,
 			HouseholdID: householdId,
 			Name:        name,
 			Location:    location,
 			Description: description,
-			ItemCount:   item_count,
-			Rooms:       utils.Values(rooms),
+			Rooms:       roomList,
 			Timestamp:   timestamp,
+			Order:       order,
 		})
 	}
 
 	if err := iter.Close(); err != nil {
 		return nil, fmt.Errorf("failed to get user households: %w", err)
 	}
+
+	slices.SortFunc(households, func(a, b UserHouseholdModel) int {
+		if a.Order < b.Order {
+			return -1
+		}
+		if a.Order > b.Order {
+			return 1
+		}
+		return 0
+	})
 
 	return households, nil
 }
@@ -72,12 +83,23 @@ func (r UserHouseholdRepository) GetUserHousehold(ctx context.Context, userId st
 	}
 
 	var name, location, description string
-	var item_count int
-	var rooms map[gocql.UUID]UserHouseholdRoomModel
+	var rooms map[string]UserHouseholdRoomModel
 	var timestamp int64
-	if err := r.db.Query("SELECT name, location, description, item_count, rooms, timestamp FROM user_households WHERE user_id = ? AND household_id = ?", userId, householdUUID).WithContext(ctx).Scan(&name, &location, &description, &item_count, &rooms, &timestamp); err != nil {
+	var order uint
+	if err := r.db.Query("SELECT name, location, description, rooms, tstamp, sort_order FROM user_households WHERE user_id = ? AND household_id = ?", userId, householdUUID).WithContext(ctx).Scan(&name, &location, &description, &rooms, &timestamp, &order); err != nil {
 		return UserHouseholdModel{}, fmt.Errorf("failed to get user household: %w", err)
 	}
+
+	roomList := utils.Values(rooms)
+	slices.SortFunc(roomList, func(a, b UserHouseholdRoomModel) int {
+		if a.Order < b.Order {
+			return -1
+		}
+		if a.Order > b.Order {
+			return 1
+		}
+		return 0
+	})
 
 	return UserHouseholdModel{
 		UserID:      userId,
@@ -85,31 +107,14 @@ func (r UserHouseholdRepository) GetUserHousehold(ctx context.Context, userId st
 		Name:        name,
 		Location:    location,
 		Description: description,
-		ItemCount:   item_count,
-		Rooms:       utils.Values(rooms),
+		Rooms:       roomList,
 		Timestamp:   timestamp,
+		Order:       order,
 	}, nil
 }
 
-func (r UserHouseholdRepository) UpsertRoom(ctx context.Context, userId string, householdId string, roomId string, name string, itemCount int) error {
-	householdUUID, err := gocql.ParseUUID(householdId)
-	if err != nil {
-		return fmt.Errorf("invalid household ID: %s", householdId)
-	}
-
-	roomUUID, err := gocql.ParseUUID(roomId)
-	if err != nil {
-		return fmt.Errorf("invalid room ID: %s", roomId)
-	}
-
-	room := UserHouseholdRoomModel{
-		HouseholdID: householdUUID,
-		RoomID:      roomUUID,
-		Name:        name,
-		ItemCount:   itemCount,
-	}
-
-	return r.db.Query("UPDATE user_households SET rooms[?] = ? WHERE user_id = ? AND household_id = ?", roomUUID, room, userId, householdUUID).WithContext(ctx).Exec()
+func (r UserHouseholdRepository) UpsertRoom(ctx context.Context, userId string, model UserHouseholdRoomModel) error {
+	return r.db.Query("UPDATE user_households SET rooms[?] = ? WHERE user_id = ? AND household_id = ?", model.RoomID.String(), model, userId, model.HouseholdID).WithContext(ctx).Exec()
 }
 
 func (r UserHouseholdRepository) GetRoom(ctx context.Context, userId string, householdId string, roomId string) (UserHouseholdRoomModel, error) {
@@ -118,13 +123,8 @@ func (r UserHouseholdRepository) GetRoom(ctx context.Context, userId string, hou
 		return UserHouseholdRoomModel{}, fmt.Errorf("invalid household ID: %s", householdId)
 	}
 
-	roomUUID, err := gocql.ParseUUID(roomId)
-	if err != nil {
-		return UserHouseholdRoomModel{}, fmt.Errorf("invalid room ID: %s", roomId)
-	}
-
 	room := UserHouseholdRoomModel{}
-	if err := r.db.Query("SELECT rooms[?] FROM user_households WHERE user_id = ? AND household_id = ?", roomUUID, userId, householdUUID).WithContext(ctx).Scan(&room); err != nil {
+	if err := r.db.Query("SELECT rooms[?] FROM user_households WHERE user_id = ? AND household_id = ?", roomId, userId, householdUUID).WithContext(ctx).Scan(&room); err != nil {
 		return UserHouseholdRoomModel{}, fmt.Errorf("failed to get room: %w", err)
 	}
 

@@ -19,6 +19,8 @@ type HouseholdCreatedEvent struct {
 	Name        string `json:"name"`
 	Location    string `json:"location"`
 	Description string `json:"description"`
+	Order       uint   `json:"order"`
+	Timestamp   int64  `json:"timestamp"`
 }
 
 func (e HouseholdCreatedEvent) EventType() es.EventType {
@@ -31,6 +33,7 @@ type HouseholdUpdatedEvent struct {
 	Name        string `json:"name"`
 	Location    string `json:"location"`
 	Description string `json:"description"`
+	Timestamp   int64  `json:"timestamp"`
 }
 
 func (e HouseholdUpdatedEvent) EventType() es.EventType {
@@ -42,6 +45,8 @@ type RoomAddedEvent struct {
 	UserID      string `json:"userId"`
 	RoomID      string `json:"roomId"`
 	Name        string `json:"name"`
+	Order       uint   `json:"order"`
+	Timestamp   int64  `json:"timestamp"`
 }
 
 func (e RoomAddedEvent) EventType() es.EventType {
@@ -53,7 +58,8 @@ type RoomUpdatedEvent struct {
 	UserID      string `json:"userId"`
 	RoomID      string `json:"roomId"`
 	Name        string `json:"name"`
-	ItemCount   int    `json:"itemCount"`
+	Order       uint   `json:"order"`
+	Timestamp   int64  `json:"timestamp"`
 }
 
 func (e RoomUpdatedEvent) EventType() es.EventType {

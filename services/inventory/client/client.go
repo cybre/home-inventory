@@ -82,9 +82,9 @@ func (c InventoryClient) CreateHousehold(ctx context.Context, household CreateHo
 					Name:        household.Name,
 					Location:    household.Location,
 					Description: household.Description,
-					ItemCount:   0,
 					Rooms:       []shared.UserHouseholdRoom{},
 					Timestamp:   timestamp,
+					Order:       1,
 				},
 			}
 		}).

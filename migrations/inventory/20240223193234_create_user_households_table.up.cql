@@ -2,7 +2,8 @@ CREATE TYPE user_households_room (
   household_id UUID,
   room_id UUID,
   name TEXT,
-  item_count INT
+  sort_order INT,
+  tstamp TIMESTAMP
 );
 
 CREATE TABLE user_households (
@@ -11,8 +12,8 @@ CREATE TABLE user_households (
   name TEXT,
   location TEXT,
   description TEXT,
-  item_count INT,
-  rooms MAP<TEXT, FROZEN<user_households_room>>,
-  timestamp TIMESTAMP,
+  rooms MAP<TEXT, frozen<user_households_room>>,
+  tstamp TIMESTAMP,
+  sort_order INT,
   PRIMARY KEY (user_id, household_id)
 );
