@@ -168,3 +168,29 @@ func editHouseholdViewHandler(householdGetter HouseholdGetter) echo.HandlerFunc 
 		})
 	}
 }
+
+type HouseholdDeleter interface {
+	DeleteHousehold(ctx context.Context, userID, householdID string) error
+}
+
+func deleteHouseholdHandler(householdDeleter HouseholdDeleter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+
+		if err := householdDeleter.DeleteHousehold(c.Request().Context(), user.ID, householdID); err != nil {
+			return fmt.Errorf("failed to delete household: %w", err)
+		}
+
+		if htmx.IsHTMXRequest(c) {
+			toast.Success(c, "Household has been deleted successfully")
+			return c.NoContent(http.StatusOK)
+		}
+
+		return c.Redirect(http.StatusFound, "/")
+	}
+}

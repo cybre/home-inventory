@@ -64,8 +64,10 @@ func main() {
 	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate(householdDomainService))
 	es.RegisterEvent(household.HouseholdCreatedEvent{})
 	es.RegisterEvent(household.HouseholdUpdatedEvent{})
+	es.RegisterEvent(household.HouseholdDeletedEvent{})
 	es.RegisterEvent(household.RoomAddedEvent{})
 	es.RegisterEvent(household.RoomUpdatedEvent{})
+	es.RegisterEvent(household.RoomDeletedEvent{})
 	es.RegisterEvent(household.ItemAddedEvent{})
 	es.RegisterEvent(household.ItemUpdatedEvent{})
 

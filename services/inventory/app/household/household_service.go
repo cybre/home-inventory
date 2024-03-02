@@ -47,6 +47,13 @@ func (s HouseholdService) UpdateHousehold(ctx context.Context, data shared.Updat
 	})
 }
 
+func (s HouseholdService) DeleteHousehold(ctx context.Context, data shared.DeleteHouseholdCommandData) error {
+	return s.commandBus.Dispatch(ctx, household.DeleteHouseholdCommand{
+		HouseholdID: data.HouseholdID,
+		UserID:      data.UserID,
+	})
+}
+
 func (s HouseholdService) AddRoom(ctx context.Context, data shared.AddRoomCommandData) error {
 	return s.commandBus.Dispatch(ctx, household.AddRoomCommand{
 		HouseholdID: data.HouseholdID,
@@ -62,6 +69,14 @@ func (s HouseholdService) UpdateRoom(ctx context.Context, data shared.UpdateRoom
 		UserID:      data.UserID,
 		RoomID:      data.RoomID,
 		Name:        data.Name,
+	})
+}
+
+func (s HouseholdService) DeleteRoom(ctx context.Context, data shared.DeleteRoomCommandData) error {
+	return s.commandBus.Dispatch(ctx, household.DeleteRoomCommand{
+		HouseholdID: data.HouseholdID,
+		UserID:      data.UserID,
+		RoomID:      data.RoomID,
 	})
 }
 

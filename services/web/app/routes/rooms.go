@@ -123,9 +123,8 @@ func editRoomHandler(roomUpdater RoomUpdater) echo.HandlerFunc {
 
 		room.Name = c.FormValue("name")
 
-		toast.Success(c, "Room has been updated successfully")
-
 		if htmx.IsHTMXRequest(c) {
+			toast.Success(c, "Room has been updated successfully")
 			return c.Render(http.StatusOK, "room_card", room)
 		}
 
@@ -156,5 +155,32 @@ func editRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
 			"Title":       "Edit Room",
 			"EditingRoom": room,
 		})
+	}
+}
+
+type RoomDeleter interface {
+	DeleteRoom(ctx context.Context, userId, householdId, roomId string) error
+}
+
+func deleteRoomHandler(roomDeleter RoomDeleter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+		roomID := c.Param("roomId")
+
+		if err := roomDeleter.DeleteRoom(c.Request().Context(), user.ID, householdID, roomID); err != nil {
+			return toast.Error("Failed to delete room")
+		}
+
+		if htmx.IsHTMXRequest(c) {
+			toast.Success(c, "Room has been deleted successfully")
+			return c.NoContent(http.StatusOK)
+		}
+
+		return c.Redirect(http.StatusFound, "/")
 	}
 }

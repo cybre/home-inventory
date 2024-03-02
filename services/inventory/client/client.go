@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	GetUserHouseholdsCacheKeyFormat = "GetUserHouseholds_%s"
-	GetUserHouseholdCacheKeyFormat  = "GetUserHousehold_%s_%s"
+	GetUserHouseholdsCacheKeyFormat    = "GetUserHouseholds_%s"
+	GetUserHouseholdCacheKeyFormat     = "GetUserHousehold_%s_%s"
+	GetUserHouseholdRoomCacheKeyFormat = "GetUserHouseholdRoom_%s_%s_%s"
 )
 
 type InventoryClient struct {
@@ -132,6 +133,28 @@ func (c InventoryClient) UpdateHousehold(ctx context.Context, household UpdateHo
 	return nil
 }
 
+func (c InventoryClient) DeleteHousehold(ctx context.Context, userId, householdId string) error {
+	resp, err := requestbuilder.New(http.MethodDelete, c.address+shared.UserHouseholdRoute).
+		WithPathParam(shared.UserHouseholdsUserIDParam, userId).
+		WithPathParam(shared.UserHouseholdsHouseholdIDParam, householdId).
+		WithInvalidateCache(
+			c.cache,
+			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, userId, householdId),
+			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, userId),
+		).
+		WithRetry().
+		Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return echo.NewHTTPError(resp.StatusCode, "failed to delete household")
+	}
+
+	return nil
+}
+
 func (c InventoryClient) GetUserHousehold(ctx context.Context, userId, householdId string) (shared.UserHousehold, error) {
 	resp, err := requestbuilder.
 		New(http.MethodGet, c.address+shared.UserHouseholdRoute).
@@ -206,6 +229,7 @@ func (c InventoryClient) UpdateRoom(ctx context.Context, room UpdateRoomRequest)
 			c.cache,
 			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, room.UserID, room.HouseholdID),
 			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, room.UserID),
+			fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, room.UserID, room.HouseholdID, room.RoomID),
 		).
 		WithRetry().
 		Do(ctx)
@@ -220,6 +244,30 @@ func (c InventoryClient) UpdateRoom(ctx context.Context, room UpdateRoomRequest)
 	return nil
 }
 
+func (c InventoryClient) DeleteRoom(ctx context.Context, userId, householdId, roomId string) error {
+	resp, err := requestbuilder.New(http.MethodDelete, c.address+shared.UserHouseholdRoomRoute).
+		WithPathParam(shared.UserHouseholdsUserIDParam, userId).
+		WithPathParam(shared.UserHouseholdsHouseholdIDParam, householdId).
+		WithPathParam(shared.UserHouseholdsRoomIDParam, roomId).
+		WithInvalidateCache(
+			c.cache,
+			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, userId, householdId),
+			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, userId),
+			fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, userId, householdId, roomId),
+		).
+		WithRetry().
+		Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return echo.NewHTTPError(resp.StatusCode, "failed to delete room")
+	}
+
+	return nil
+}
+
 func (c InventoryClient) GetUserHouseholdRoom(ctx context.Context, userID, householdID, roomID string) (shared.UserHouseholdRoom, error) {
 	resp, err := requestbuilder.
 		New(http.MethodGet, c.address+shared.UserHouseholdRoomRoute).
@@ -227,6 +275,7 @@ func (c InventoryClient) GetUserHouseholdRoom(ctx context.Context, userID, house
 		WithPathParam(shared.UserHouseholdsHouseholdIDParam, householdID).
 		WithPathParam(shared.UserHouseholdsRoomIDParam, roomID).
 		WithHeader("Accept", "application/json").
+		WithCache(c.cache, fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, userID, householdID, roomID)).
 		WithRetry().
 		Do(ctx)
 	if err != nil {

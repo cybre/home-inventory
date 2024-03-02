@@ -20,9 +20,11 @@ import (
 type HouseholdService interface {
 	CreateHousehold(context.Context, shared.CreateHouseholdCommandData) error
 	UpdateHousehold(context.Context, shared.UpdateHouseholdCommandData) error
+	DeleteHousehold(context.Context, shared.DeleteHouseholdCommandData) error
 
 	AddRoom(context.Context, shared.AddRoomCommandData) error
 	UpdateRoom(context.Context, shared.UpdateRoomCommandData) error
+	DeleteRoom(context.Context, shared.DeleteRoomCommandData) error
 
 	AddItem(context.Context, shared.AddItemCommandData) error
 	UpdateItem(context.Context, shared.UpdateItemCommandData) error

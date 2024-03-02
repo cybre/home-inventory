@@ -12,8 +12,10 @@ import (
 type HouseholdRepo interface {
 	InsertHousehold(ctx context.Context, model UserHouseholdModel) error
 	UpdateHousehold(ctx context.Context, model UserHouseholdModel) error
+	DeleteHousehold(ctx context.Context, userId string, householdId string) error
 
 	UpsertRoom(ctx context.Context, userId string, model UserHouseholdRoomModel) error
+	DeleteRoom(ctx context.Context, userId string, householdId string, roomId string) error
 }
 
 type UserHouseholdProjector struct {
@@ -32,10 +34,14 @@ func (p UserHouseholdProjector) HandleEvent(ctx context.Context, event es.EventD
 		return p.handleHouseholdCreatedEvent(ctx, e)
 	case household.HouseholdUpdatedEvent:
 		return p.handleHouseholdUpdatedEvent(ctx, e)
+	case household.HouseholdDeletedEvent:
+		return p.handleHouseholdDeletedEvent(ctx, e)
 	case household.RoomAddedEvent:
 		return p.handleRoomAddedEvent(ctx, e)
 	case household.RoomUpdatedEvent:
 		return p.handleRoomUpdatedEvent(ctx, e)
+	case household.RoomDeletedEvent:
+		return p.handleRoomDeletedEvent(ctx, e)
 	default:
 		return es.ErrUnknownEvent
 	}
@@ -45,8 +51,10 @@ func (p UserHouseholdProjector) Events() []es.EventType {
 	return []es.EventType{
 		household.EventTypeHouseholdCreated,
 		household.EventTypeHouseholdUpdated,
+		household.EventTypeHouseholdDeleted,
 		household.EventTypeRoomAdded,
 		household.EventTypeRoomUpdated,
+		household.EventTypeRoomDeleted,
 	}
 }
 
@@ -95,6 +103,14 @@ func (p UserHouseholdProjector) handleHouseholdUpdatedEvent(ctx context.Context,
 	return nil
 }
 
+func (p UserHouseholdProjector) handleHouseholdDeletedEvent(ctx context.Context, e household.HouseholdDeletedEvent) error {
+	if err := p.repository.DeleteHousehold(ctx, e.UserID, e.HouseholdID); err != nil {
+		return fmt.Errorf("failed to delete household: %w", err)
+	}
+
+	return nil
+}
+
 func (p UserHouseholdProjector) handleRoomAddedEvent(ctx context.Context, e household.RoomAddedEvent) error {
 	householdUUID, err := gocql.ParseUUID(e.HouseholdID)
 	if err != nil {
@@ -138,6 +154,14 @@ func (p UserHouseholdProjector) handleRoomUpdatedEvent(ctx context.Context, e ho
 		Timestamp:   e.Timestamp,
 	}); err != nil {
 		return fmt.Errorf("failed to update room: %w", err)
+	}
+
+	return nil
+}
+
+func (p UserHouseholdProjector) handleRoomDeletedEvent(ctx context.Context, e household.RoomDeletedEvent) error {
+	if err := p.repository.DeleteRoom(ctx, e.UserID, e.HouseholdID, e.RoomID); err != nil {
+		return fmt.Errorf("failed to delete room: %w", err)
 	}
 
 	return nil

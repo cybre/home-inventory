@@ -137,6 +137,10 @@ func (r Rooms) Without(id RoomID) Rooms {
 	return rooms
 }
 
+func (r Rooms) Remove(id RoomID) {
+	delete(r, id)
+}
+
 func (r Rooms) Count() int {
 	return len(r)
 }

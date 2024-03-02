@@ -6,7 +6,6 @@
 >
   <a
     href="/households/{{ $household.HouseholdID }}/edit"
-    hx-boost="true"
     hx-target="#household-{{ $household.HouseholdID }}"
     hx-push-url="false"
     hx-swap="outerHTML"
@@ -65,7 +64,6 @@
       $.AddingRoom }} {{ template "room_add" $household.HouseholdID }} {{ end }}
       <a
         href="/households/{{ $household.HouseholdID }}/rooms/create"
-        hx-boost="true"
         hx-target="this"
         hx-swap="beforebegin"
         hx-push-url="false"

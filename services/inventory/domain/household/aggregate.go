@@ -32,6 +32,8 @@ type HouseholdAgregate struct {
 	Order       HouseholdOrder
 
 	Rooms Rooms
+
+	Deleted bool
 }
 
 func NewHouseholdAggregate(householdService HouseholdService) es.AggregateRootFactoryFunc {
@@ -49,10 +51,14 @@ func (a *HouseholdAgregate) ApplyEvent(event es.EventData) {
 		a.applyHouseholdCreatedEvent(e)
 	case HouseholdUpdatedEvent:
 		a.applyHouseholdUpdatedEvent(e)
+	case HouseholdDeletedEvent:
+		a.applyHouseholdDeletedEvent(e)
 	case RoomAddedEvent:
 		a.applyRoomAddedEvent(e)
 	case RoomUpdatedEvent:
 		a.applyRoomUpdatedEvent(e)
+	case RoomDeletedEvent:
+		a.applyRoomDeletedEvent(e)
 	case ItemAddedEvent:
 		a.applyItemAddedEvent(e)
 	case ItemUpdatedEvent:
@@ -68,10 +74,14 @@ func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Comman
 		return a.handleCreateHouseholdCommand(ctx, c)
 	case UpdateHouseholdCommand:
 		return a.handleUpdateHouseholdCommand(ctx, c)
+	case DeleteHouseholdCommand:
+		return a.handleDeleteHouseholdCommand(ctx, c)
 	case AddRoomCommand:
 		return a.handleAddRoomCommand(ctx, c)
 	case UpdateRoomCommand:
 		return a.handleUpdateRoomCommand(ctx, c)
+	case DeleteRoomCommand:
+		return a.handleDeleteRoomCommand(ctx, c)
 	case AddItemCommand:
 		return a.handleAddItemCommand(ctx, c)
 	case UpdateItemCommand:
@@ -160,6 +170,17 @@ func (a *HouseholdAgregate) handleUpdateHouseholdCommand(ctx context.Context, co
 	})
 }
 
+func (a *HouseholdAgregate) handleDeleteHouseholdCommand(ctx context.Context, command DeleteHouseholdCommand) ([]es.EventData, error) {
+	if a.Version() == initialAggregateVersion {
+		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
+	}
+
+	return c.Events(HouseholdDeletedEvent{
+		HouseholdID: a.AggregateID().String(),
+		UserID:      a.UserID.String(),
+	})
+}
+
 func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command AddRoomCommand) ([]es.EventData, error) {
 	if a.Version() == initialAggregateVersion {
 		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
@@ -211,6 +232,23 @@ func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command
 		Name:        room.Name.String(),
 		Order:       room.Order.Uint(),
 		Timestamp:   time.Now().UnixMilli(),
+	})
+}
+
+func (a *HouseholdAgregate) handleDeleteRoomCommand(ctx context.Context, command DeleteRoomCommand) ([]es.EventData, error) {
+	if a.Version() == initialAggregateVersion {
+		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
+	}
+
+	roomID, err := NewRoomID(command.RoomID)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Events(RoomDeletedEvent{
+		HouseholdID: a.AggregateID().String(),
+		UserID:      a.UserID.String(),
+		RoomID:      roomID.String(),
 	})
 }
 
@@ -303,6 +341,10 @@ func (a *HouseholdAgregate) applyHouseholdUpdatedEvent(event HouseholdUpdatedEve
 	a.Description, _ = NewHouseholdDescription(event.Description)
 }
 
+func (a *HouseholdAgregate) applyHouseholdDeletedEvent(event HouseholdDeletedEvent) {
+	a.Deleted = true
+}
+
 func (a *HouseholdAgregate) applyRoomAddedEvent(event RoomAddedEvent) {
 	newRoom, _ := NewRoom(event.RoomID, event.Name, event.Order)
 	a.Rooms.Add(newRoom)
@@ -315,6 +357,11 @@ func (a *HouseholdAgregate) applyRoomUpdatedEvent(event RoomUpdatedEvent) {
 	room, _ = room.Update(event.Name)
 
 	a.Rooms.Update(room)
+}
+
+func (a *HouseholdAgregate) applyRoomDeletedEvent(event RoomDeletedEvent) {
+	roomID, _ := NewRoomID(event.RoomID)
+	a.Rooms.Remove(roomID)
 }
 
 func (a *HouseholdAgregate) applyItemAddedEvent(event ItemAddedEvent) {

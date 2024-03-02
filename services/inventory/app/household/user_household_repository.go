@@ -113,6 +113,15 @@ func (r UserHouseholdRepository) GetUserHousehold(ctx context.Context, userId st
 	}, nil
 }
 
+func (r UserHouseholdRepository) DeleteHousehold(ctx context.Context, userId string, householdId string) error {
+	householdUUID, err := gocql.ParseUUID(householdId)
+	if err != nil {
+		return fmt.Errorf("invalid household ID: %s", householdId)
+	}
+
+	return r.db.Query("DELETE FROM user_households WHERE user_id = ? AND household_id = ?", userId, householdUUID).WithContext(ctx).Exec()
+}
+
 func (r UserHouseholdRepository) UpsertRoom(ctx context.Context, userId string, model UserHouseholdRoomModel) error {
 	return r.db.Query("UPDATE user_households SET rooms[?] = ? WHERE user_id = ? AND household_id = ?", model.RoomID.String(), model, userId, model.HouseholdID).WithContext(ctx).Exec()
 }
@@ -129,4 +138,13 @@ func (r UserHouseholdRepository) GetRoom(ctx context.Context, userId string, hou
 	}
 
 	return room, nil
+}
+
+func (r UserHouseholdRepository) DeleteRoom(ctx context.Context, userId string, householdId string, roomId string) error {
+	householdUUID, err := gocql.ParseUUID(householdId)
+	if err != nil {
+		return fmt.Errorf("invalid household ID: %s", householdId)
+	}
+
+	return r.db.Query("DELETE rooms[?] FROM user_households WHERE user_id = ? AND household_id = ?", roomId, userId, householdUUID).WithContext(ctx).Exec()
 }

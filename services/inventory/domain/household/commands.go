@@ -34,6 +34,19 @@ func (c UpdateHouseholdCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.HouseholdID)
 }
 
+type DeleteHouseholdCommand struct {
+	HouseholdID string
+	UserID      string
+}
+
+func (c DeleteHouseholdCommand) AggregateType() es.AggregateType {
+	return HouseholdAggregateType
+}
+
+func (c DeleteHouseholdCommand) AggregateID() es.AggregateID {
+	return es.AggregateID(c.HouseholdID)
+}
+
 type AddRoomCommand struct {
 	HouseholdID string
 	UserID      string
@@ -61,6 +74,20 @@ func (c UpdateRoomCommand) AggregateType() es.AggregateType {
 }
 
 func (c UpdateRoomCommand) AggregateID() es.AggregateID {
+	return es.AggregateID(c.HouseholdID)
+}
+
+type DeleteRoomCommand struct {
+	HouseholdID string
+	UserID      string
+	RoomID      string
+}
+
+func (c DeleteRoomCommand) AggregateType() es.AggregateType {
+	return HouseholdAggregateType
+}
+
+func (c DeleteRoomCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.HouseholdID)
 }
 

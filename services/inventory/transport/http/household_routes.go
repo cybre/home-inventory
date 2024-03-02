@@ -14,10 +14,12 @@ func buildHouseholdRoutes(e *echo.Echo, householdService HouseholdService, valid
 	e.POST(shared.UserHouseholdsRoute, eh.NewValidateHandler(createHouseholdHandler(householdService), validate))
 	e.GET(shared.UserHouseholdRoute, getUserHouseholdHandler(householdService))
 	e.PUT(shared.UserHouseholdRoute, eh.NewValidateHandler(updateHouseholdHandler(householdService), validate))
+	e.DELETE(shared.UserHouseholdRoute, eh.NewValidateHandler(deleteHouseholdHandler(householdService), validate))
 
 	e.POST(shared.UserHouseholdRoomsRoute, eh.NewValidateHandler(addRoomHandler(householdService), validate))
 	e.GET(shared.UserHouseholdRoomRoute, getUserHouseholdRoomHandler(householdService))
 	e.PUT(shared.UserHouseholdRoomRoute, eh.NewValidateHandler(updateRoomHandler(householdService), validate))
+	e.DELETE(shared.UserHouseholdRoomRoute, eh.NewValidateHandler(deleteRoomHandler(householdService), validate))
 }
 
 func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared.CreateHouseholdCommandData] {
@@ -87,6 +89,16 @@ func updateHouseholdHandler(householdService HouseholdService) eh.Handler[shared
 	}
 }
 
+func deleteHouseholdHandler(householdService HouseholdService) eh.Handler[shared.DeleteHouseholdCommandData] {
+	return func(c echo.Context, data shared.DeleteHouseholdCommandData) error {
+		if err := householdService.DeleteHousehold(c.Request().Context(), data); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
 func getUserHouseholdRoomHandler(householdService HouseholdService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userId := c.Param("userId")
@@ -115,6 +127,16 @@ func addRoomHandler(householdService HouseholdService) eh.Handler[shared.AddRoom
 func updateRoomHandler(householdService HouseholdService) eh.Handler[shared.UpdateRoomCommandData] {
 	return func(c echo.Context, data shared.UpdateRoomCommandData) error {
 		if err := householdService.UpdateRoom(c.Request().Context(), data); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+func deleteRoomHandler(householdService HouseholdService) eh.Handler[shared.DeleteRoomCommandData] {
+	return func(c echo.Context, data shared.DeleteRoomCommandData) error {
+		if err := householdService.DeleteRoom(c.Request().Context(), data); err != nil {
 			return err
 		}
 
