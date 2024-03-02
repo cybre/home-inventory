@@ -1,42 +1,41 @@
-{{ $room := . }}
+{{ $householdId := . }}
+{{ $timestamp := timestamp }}
 
 <div
-  class="relative min-h-32 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-gray-300 transition-colors duration-150"
-  id="room-edit-{{ $room.RoomID }}"
+  class="relative min-h-32 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-gray-300 transition-colors duration-150 p-2"
+  x-data
+  x-ref="addRoomCard"
+  id="room-add-{{ $householdId }}-{{ $timestamp }}"
 >
   <form
-    action="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/edit"
+    action="/households/{{ $householdId }}/rooms/create"
     method="POST"
-    hx-action="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/edit"
+    hx-action="/households/{{ $householdId }}/rooms/create"
     hx-method="POST"
-    hx-target="#room-edit-{{ $room.RoomID }}"
-    hx-swap="outerHTML"
     hx-push-url="false"
-    class="flex flex-col gap-2 p-2"
+    hx-target="#room-add-{{ $householdId }}-{{ $timestamp }}"
+    hx-swap="outerHTML"
+    class="flex flex-col gap-2"
   >
     <div class="space-y-1">
       <label
         class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        for="room-name-{{ $room.RoomID }}"
+        for="new-room-name-{{ $householdId }}"
         >Room Name</label
       ><input
         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        id="room-name-{{ $room.RoomID }}"
+        id="new-room-name-{{ $householdId }}"
         name="name"
         placeholder="Name"
         required=""
-        value="{{ .Name }}"
         minlength="3"
         maxlength="50"
       />
     </div>
     <div class="flex items-center gap-2">
       <a
-        href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}"
-        hx-push-url="false"
-        hx-boosted="true"
-        hx-target="#room-edit-{{ $room.RoomID }}"
-        hx-swap="outerHTML"
+        href="/"
+        @click.prevent="$refs.addRoomCard.remove()"
         class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2 py-1"
       >
         Cancel
@@ -45,8 +44,8 @@
         type="submit"
         class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-2 py-1 ml-auto"
       >
-        Update
+        Create
       </button>
-    </div>
+    </div>  
   </form>
 </div>

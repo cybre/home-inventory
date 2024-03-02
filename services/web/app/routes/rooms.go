@@ -10,6 +10,7 @@ import (
 	"github.com/cybre/home-inventory/services/web/app/helpers"
 	"github.com/cybre/home-inventory/services/web/app/htmx"
 	"github.com/cybre/home-inventory/services/web/app/toast"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -36,6 +37,59 @@ func getRoomHandler(roomGetter RoomGetter) echo.HandlerFunc {
 		}
 
 		return c.Redirect(http.StatusTemporaryRedirect, "/")
+	}
+}
+
+type RoomCreator interface {
+	AddRoom(ctx context.Context, room client.AddRoomRequest) error
+}
+
+func createRoomHandler(roomCreator RoomCreator) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, ok := helpers.GetUser(c)
+		if !ok {
+			return fmt.Errorf("user not found")
+		}
+
+		householdID := c.Param("householdId")
+
+		request := client.AddRoomRequest{
+			HouseholdID: householdID,
+			UserID:      user.ID,
+			RoomID:      uuid.NewString(),
+			Name:        c.FormValue("name"),
+		}
+
+		if err := roomCreator.AddRoom(c.Request().Context(), request); err != nil {
+			return toast.Error("Failed to add room")
+		}
+
+		if htmx.IsHTMXRequest(c) {
+			toast.Success(c, "Room has added successfully")
+			return c.Render(http.StatusOK, "room_card", shared.UserHouseholdRoom{
+				HouseholdID: request.HouseholdID,
+				RoomID:      request.RoomID,
+				Name:        request.Name,
+				ItemCount:   0,
+			})
+		}
+
+		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
+func createRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		householdId := c.Param("householdId")
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "room_add", householdId)
+		}
+
+		return c.Render(http.StatusOK, "home", map[string]interface{}{
+			"Title":      "Add Room",
+			"AddingRoom": householdId,
+		})
 	}
 }
 

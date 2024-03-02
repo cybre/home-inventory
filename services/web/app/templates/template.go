@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cybre/home-inventory/services/inventory/shared"
 	"github.com/cybre/home-inventory/services/web/app/auth"
@@ -50,6 +51,9 @@ func New() *Renderer {
 						dict[key] = values[i+1]
 					}
 					return dict, nil
+				},
+				"timestamp": func() int64 {
+					return time.Now().UnixMilli()
 				},
 			},
 		},

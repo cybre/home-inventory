@@ -2,16 +2,11 @@
 
 <div class="grid gap-2 lg:gap-4 md:grid-cols-2 2xl:grid-cols-3" hx-boost="true">
   {{ range $household := .Households }}
-    <div
-      class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300 min-h-72"
-      id="household-{{ .HouseholdID }}"
-    >
-      {{ if and $.PageData.Editing (eq $.PageData.Editing.HouseholdID $household.HouseholdID) }}
-        {{ template "household_edit" $household }} 
-      {{ else }}
-        {{ template "household_card" dict "Household" $household "EditingRoom" $.PageData.EditingRoom }}
-      {{end}}
-    </div>
+    {{ if and $.PageData.Editing (eq $.PageData.Editing.HouseholdID $household.HouseholdID) }}
+      {{ template "household_edit" $household }} 
+    {{ else }}
+      {{ template "household_card" dict "Household" $household "EditingRoom" $.PageData.EditingRoom "AddingRoom" (eq $.PageData.AddingRoom $household.HouseholdID) }} 
+    {{end}}
   {{ end }}
   <div
     class="rounded-lg border-[3px] border-dashed bg-card text-card-foreground flex items-center justify-center group cursor-pointer hover:border-gray-300 transition-colors duration-150 p-6 min-h-80"

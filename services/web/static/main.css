@@ -718,6 +718,10 @@ body {
   height: 100vh;
 }
 
+.max-h-80 {
+  max-height: 20rem;
+}
+
 .min-h-32 {
   min-height: 8rem;
 }
@@ -1279,6 +1283,67 @@ body {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
 
+.scroll-shadows {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+.scroll-parent:before {
+  content: "";
+  background: radial-gradient(
+      farthest-side at 50% 0,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0)
+    )
+    center top;
+  height: 10px;
+  display: block;
+  position: absolute;
+  width: 85%;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.scroll-parent:after {
+  content: "";
+  background: radial-gradient(
+      farthest-side at 50% 100%,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0)
+    )
+    center bottom;
+  height: 10px;
+  display: block;
+  position: absolute;
+  margin-top: -10px;
+  width: 85%;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.scroll-shadows:before {
+  background: linear-gradient(white 30%, rgba(255, 255, 255, 0)) center top;
+  content: "";
+  background: white;
+  display: block;
+  position: sticky;
+  height: 10px;
+  z-index: 11;
+}
+
+.scroll-shadows:after {
+  background: linear-gradient(rgba(255, 255, 255, 0), white 70%) center bottom;
+  content: "";
+  background: white;
+  display: block;
+  position: sticky;
+  height: 10px;
+  z-index: 11;
+}
+
 .file\:border-0::file-selector-button {
   border-width: 0px;
 }
@@ -1526,10 +1591,6 @@ body {
     display: flex;
   }
 
-  .lg\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .lg\:gap-4 {
     gap: 1rem;
   }
@@ -1548,10 +1609,6 @@ body {
 }
 
 @media (min-width: 1280px) {
-  .xl\:gap-6 {
-    gap: 1.5rem;
-  }
-
   .xl\:p-6 {
     padding: 1.5rem;
   }

@@ -1,55 +1,60 @@
 {{ $room := . }}
 
-<a
-  href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/edit"
-  hx-boost="true"
-  hx-target="#room-{{ $room.RoomID }}"
-  hx-push-url="false"
-  hx-swap="innerHTML show:bottom"
-  class="z-10 absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
-  title="Edit room"
+<div
+  class="relative min-h-32 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-gray-300 transition-colors duration-150"
+  id="room-{{ $room.RoomID }}"
 >
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke-width="1.5"
-    stroke="currentColor"
-    class="h-4 w-4"
+  <a
+    href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/edit"
+    hx-boost="true"
+    hx-target="#room-{{ $room.RoomID }}"
+    hx-swap="outerHTML"
+    hx-push-url="false"
+    class="z-10 absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
+    title="Edit room"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-    />
-  </svg>
-</a>
-<a
-  href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/items"
-  class="flex items-center justify-center"
->
-  <div class="flex-col p-6 flex items-center gap-4">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
       fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="w-8 h-8"
+      class="h-4 w-4"
     >
-      <path d="m7.5 4.27 9 5.15"></path>
       <path
-        d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
-      ></path>
-      <path d="m3.3 7 8.7 5 8.7-5"></path>
-      <path d="M12 22V12"></path>
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+      />
     </svg>
-    <h3 class="whitespace-nowrap tracking-tight text-xl font-bold">
-      {{ $room.Name }}
-    </h3>
-  </div>
-</a>
+  </a>
+  <a
+    href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/items"
+    class="flex items-center justify-center"
+  >
+    <div class="flex-col p-6 flex items-center gap-4 max-w-full">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="w-8 h-8"
+      >
+        <path d="m7.5 4.27 9 5.15"></path>
+        <path
+          d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
+        ></path>
+        <path d="m3.3 7 8.7 5 8.7-5"></path>
+        <path d="M12 22V12"></path>
+      </svg>
+      <h3 class="whitespace-nowrap tracking-tight text-xl font-bold text-ellipsis overflow-hidden max-w-full">
+        {{ $room.Name }}
+      </h3>
+    </div>
+  </a>
+</div>

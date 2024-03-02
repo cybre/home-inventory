@@ -1,73 +1,89 @@
-<div class="flex flex-col space-y-1.5 p-6 pb-2">
-  <h3 class="font-semibold whitespace-nowrap tracking-tight text-lg">
-    Edit Household
-  </h3>
+{{ $household := . }}
+
+<div
+  class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300 min-h-72"
+  id="household-edit-{{ $household.HouseholdID }}"
+>
+  <div class="flex flex-col space-y-1.5 p-6 pb-2">
+    <h3 class="font-semibold whitespace-nowrap tracking-tight text-lg">
+      Edit Household
+    </h3>
+  </div>
+  <form
+    action="/households/{{ $household.HouseholdID }}/edit"
+    method="POST"
+    hx-action="/households/{{ $household.HouseholdID }}/edit"
+    hx-method="POST"
+    hx-target="#household-edit-{{ $household.HouseholdID }}"
+    hx-swap="outerHTML"
+    hx-push-url="false"
+  >
+    <div class="p-6 pt-2 space-y-4">
+      <div class="space-y-2">
+        <label
+          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          for="name"
+          >Household Name</label
+        ><input
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          id="name"
+          name="name"
+          placeholder="Name"
+          required=""
+          value="{{ $household.Name }}"
+          minlength="3"
+          maxlength="50"
+        />
+      </div>
+      <div class="space-y-2">
+        <label
+          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          for="location"
+          >Location</label
+        ><input
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          id="location"
+          name="location"
+          placeholder="Location"
+          required=""
+          value="{{ $household.Location }}"
+          minlength="3"
+          maxlength="50"
+        />
+      </div>
+      <div class="space-y-2">
+        <label
+          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          for="description"
+          >Description</label
+        ><textarea
+          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          id="description"
+          name="description"
+          placeholder="Description"
+          maxlength="200"
+        >
+{{ $household.Description }}</textarea
+        >
+      </div>
+    </div>
+    <div class="flex items-center p-6">
+      <a
+        href="/households/{{ $household.HouseholdID }}"
+        hx-push-url="false"
+        hx-boosted="true"
+        hx-target="#household-edit-{{ $household.HouseholdID }}"
+        hx-swap="outerHTML"
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+      >
+        Cancel
+      </a>
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
+      >
+        Update Household
+      </button>
+    </div>
+  </form>
 </div>
-<form action="/households/{{ .HouseholdID }}/edit" method="POST" hx-action="/households/{{ .HouseholdID }}/edit" hx-method="POST" hx-target="#household-{{ .HouseholdID }}" hx-push-url="false">
-  <div class="p-6 pt-2 space-y-4">
-    <div class="space-y-2">
-      <label
-        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        for="name"
-        >Household Name</label
-      ><input
-        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        id="name"
-        name="name"
-        placeholder="Name"
-        required=""
-        value="{{ .Name }}"
-        minlength="3"
-        maxlength="50"
-      />
-    </div>
-    <div class="space-y-2">
-      <label
-        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        for="location"
-        >Location</label
-      ><input
-        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        id="location"
-        name="location"
-        placeholder="Location"
-        required=""
-        value="{{ .Location }}"
-        minlength="3"
-        maxlength="50"
-      />
-    </div>
-    <div class="space-y-2">
-      <label
-        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        for="description"
-        >Description</label
-      ><textarea
-        class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        id="description"
-        name="description"
-        placeholder="Description"
-        maxlength="200"
-      >
-{{ .Description }}</textarea
-      >
-    </div>
-  </div>
-  <div class="flex items-center p-6">
-    <a
-      href="/households/{{ .HouseholdID }}"
-      hx-push-url="false"
-      hx-boosted="true"
-      hx-target="#household-{{ .HouseholdID }}"
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-    >
-      Cancel
-    </a>
-    <button
-      type="submit"
-      class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
-    >
-      Update Household
-    </button>
-  </div>
-</form>

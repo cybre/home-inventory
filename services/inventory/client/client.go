@@ -159,6 +159,36 @@ func (c InventoryClient) GetUserHousehold(ctx context.Context, userId, household
 	return household, nil
 }
 
+type AddRoomRequest struct {
+	UserID      string `json:"-"`
+	HouseholdID string `json:"-"`
+	RoomID      string `json:"roomId"`
+	Name        string `json:"name"`
+}
+
+func (c InventoryClient) AddRoom(ctx context.Context, room AddRoomRequest) error {
+	resp, err := requestbuilder.New(http.MethodPost, c.address+shared.UserHouseholdRoomsRoute).
+		WithPathParam(shared.UserHouseholdsUserIDParam, room.UserID).
+		WithPathParam(shared.UserHouseholdsHouseholdIDParam, room.HouseholdID).
+		WithBody(room).
+		WithInvalidateCache(
+			c.cache,
+			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, room.UserID, room.HouseholdID),
+			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, room.UserID),
+		).
+		WithRetry().
+		Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return echo.NewHTTPError(resp.StatusCode, "failed to add room")
+	}
+
+	return nil
+}
+
 type UpdateRoomRequest struct {
 	UserID      string `json:"-"`
 	HouseholdID string `json:"-"`

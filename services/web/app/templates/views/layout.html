@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="htmx-config" content='{"scrollIntoViewOnBoost":false, "globalViewTransitions":true}' />
+    <meta
+      name="htmx-config"
+      content='{"scrollIntoViewOnBoost":false, "globalViewTransitions":true}'
+    />
     <title>{{ partial "title" }} | Home Inventory</title>
     <script
       src="https://unpkg.com/htmx.org@1.9.10"
@@ -123,9 +126,9 @@
           </div>
 
           <div class="pl-2 pr-2">
-          <progress
-            x-data="{ value: 100, colors: {error: 'progress-unfilled:bg-red-100 progress-filled:bg-red-300', info: 'progress-unfilled:bg-blue-100 progress-filled:bg-blue-300', success: 'progress-unfilled:bg-green-100 progress-filled:bg-green-300', warning: 'progress-unfilled:bg-yellow-100 progress-filled:bg-yellow-300'}}"
-            x-init="
+            <progress
+              x-data="{ value: 100, colors: {error: 'progress-unfilled:bg-red-100 progress-filled:bg-red-300', info: 'progress-unfilled:bg-blue-100 progress-filled:bg-blue-300', success: 'progress-unfilled:bg-green-100 progress-filled:bg-green-300', warning: 'progress-unfilled:bg-yellow-100 progress-filled:bg-yellow-300'}}"
+              x-init="
               setInterval(()=> {
                 if (value == 0){
                   clearInterval();
@@ -133,12 +136,12 @@
                   value-=1
                 }
               }, toast.timeOut / 100)"
-            max="100"
-            :value="value"
-            class="w-full h-1 progress-unfilled:rounded progress-filled:rounded"
-            :class="colors[toast.level]"
-          ></progress>
-        </div>
+              max="100"
+              :value="value"
+              class="w-full h-1 progress-unfilled:rounded progress-filled:rounded"
+              :class="colors[toast.level]"
+            ></progress>
+          </div>
         </div>
       </template>
     </div>
@@ -179,7 +182,10 @@
       };
 
       document.body.addEventListener("show-toast", (event) => {
-        Alpine.store("toasts").createToast(event.detail, levelTimings[event.detail.level]);
+        Alpine.store("toasts").createToast(
+          event.detail,
+          levelTimings[event.detail.level]
+        );
       });
     </script>
 
