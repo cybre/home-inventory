@@ -8,7 +8,15 @@
       {{ template "household_card" dict "Household" $household "EditingRoom" $.PageData.EditingRoom "AddingRoom" (eq $.PageData.AddingRoom $household.HouseholdID) }} 
     {{end}}
   {{ end }}
-  <div
+  {{ if $.PageData.CreatingHousehold }}
+    {{ template "household_create" }}
+  {{ end }}
+  <a
+    href="/households/create"
+    hx-boost="true"
+    hx-target="this"
+    hx-swap="beforebegin"
+    hx-push-url="false"
     class="rounded-lg border-[3px] border-dashed bg-card text-card-foreground flex items-center justify-center group cursor-pointer hover:border-gray-300 transition-colors duration-150 p-6 min-h-80"
   >
     <svg
@@ -24,5 +32,5 @@
         d="M245.1,336.9c3.4,0,6.4-1.4,8.7-3.6c2.2-2.2,3.6-5.3,3.6-8.7v-67.3h67.3c3.4,0,6.4-1.4,8.7-3.6c2.2-2.2,3.6-5.3,3.6-8.7    c0-6.8-5.5-12.3-12.2-12.2h-67.3v-67.3c0-6.8-5.5-12.3-12.2-12.2c-6.8,0-12.3,5.5-12.2,12.2v67.3h-67.3c-6.8,0-12.3,5.5-12.2,12.2    c0,6.8,5.5,12.3,12.2,12.2h67.3v67.3C232.8,331.4,238.3,336.9,245.1,336.9z"
       />
     </svg>
-  </div>
+  </a>
 </div>

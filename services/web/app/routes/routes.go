@@ -25,13 +25,14 @@ func Initialize(e *echo.Echo, authenticator *authenticator.Authenticator, invent
 		return c.Render(http.StatusOK, "onboarding_create_household", map[string]interface{}{"Title": "Onboarding"})
 	}, auth.IsAuthenticated, mustNotHaveHousehold(inventoryClient))
 
-	e.POST("/households", createHouseholdHandler(inventoryClient), auth.IsAuthenticated)
+	e.GET("/households/create", createHouseholdViewHandler(), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
+	e.POST("/households/create", createHouseholdHandler(inventoryClient), auth.IsAuthenticated)
 	e.GET("/households/:householdId", getHouseholdHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.GET("/households/:householdId/edit", editHouseholdViewHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.POST("/households/:householdId/edit", editHouseholdHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 
 	e.GET("/households/:householdId/rooms/:roomId", getRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
-	e.GET("/households/:householdId/rooms/create", createRoomViewHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
+	e.GET("/households/:householdId/rooms/create", createRoomViewHandler(), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.POST("/households/:householdId/rooms/create", createRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.GET("/households/:householdId/rooms/:roomId/edit", editRoomViewHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.POST("/households/:householdId/rooms/:roomId/edit", editRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))

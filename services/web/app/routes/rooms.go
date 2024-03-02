@@ -77,7 +77,7 @@ func createRoomHandler(roomCreator RoomCreator) echo.HandlerFunc {
 	}
 }
 
-func createRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
+func createRoomViewHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		householdId := c.Param("householdId")
 

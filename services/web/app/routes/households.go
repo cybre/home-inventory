@@ -28,18 +28,48 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 
 		referer := c.Request().Header.Get("Referer")
 
-		if err := householdCreator.CreateHousehold(c.Request().Context(), client.CreateHouseholdRequest{
+		request := client.CreateHouseholdRequest{
 			UserID:           user.ID,
 			HouseholdID:      uuid.NewString(),
 			Name:             c.FormValue("name"),
 			Location:         c.FormValue("location"),
 			Description:      c.FormValue("description"),
 			IsFromOnboarding: strings.HasSuffix(referer, "/onboarding/create-household"),
-		}); err != nil {
+		}
+
+		if err := householdCreator.CreateHousehold(c.Request().Context(), request); err != nil {
 			return fmt.Errorf("failed to create household: %w", err)
 		}
 
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_card", map[string]interface{}{
+				"Household": shared.UserHousehold{
+					UserID:      request.UserID,
+					HouseholdID: request.HouseholdID,
+					Name:        request.Name,
+					Location:    request.Location,
+					Description: request.Description,
+					Rooms:       []shared.UserHouseholdRoom{},
+					Timestamp:   0,
+					Order:       0,
+				},
+			})
+		}
+
 		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
+func createHouseholdViewHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_create", nil)
+		}
+
+		return c.Render(http.StatusOK, "home", map[string]interface{}{
+			"Title":             "Create Household",
+			"CreatingHousehold": true,
+		})
 	}
 }
 
@@ -77,8 +107,6 @@ type HouseholdUpdater interface {
 
 func editHouseholdHandler(householdUpdater HouseholdUpdater) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// return toast.Error("Failed to update household")
-
 		user, ok := helpers.GetUser(c)
 		if !ok {
 			return fmt.Errorf("user not found")

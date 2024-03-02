@@ -1,18 +1,26 @@
-{{ define "title-onboarding_create_household" }} Create household {{ end }}
+{{ $timestamp := timestamp }}
 
 <div
-  class="rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md mx-auto m-10"
+  class="relative rounded-lg border-2 bg-card text-card-foreground shadow-sm hover:border-gray-300 min-h-72"
+  id="household-create-{{ $timestamp }}"
+  x-data
+  x-ref="createHouseholdCard"
 >
-  <div class="flex flex-col space-y-1.5 p-6">
+  <div class="flex flex-col space-y-1.5 p-6 pb-2">
     <h3 class="font-semibold whitespace-nowrap tracking-tight text-lg">
       Create Household
     </h3>
-    <p class="text-sm text-muted-foreground">
-      Enter the details below to create a new household.
-    </p>
   </div>
-  <form action="/households/create" method="POST">
-    <div class="p-6 space-y-4">
+  <form
+    action="/households/create"
+    method="POST"
+    hx-action="/households"
+    hx-method="POST"
+    hx-target="#household-create-{{ $timestamp }}"
+    hx-swap="outerHTML"
+    hx-push-url="false"
+  >
+    <div class="p-6 pt-2 space-y-4">
       <div class="space-y-2">
         <label
           class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -58,10 +66,18 @@
       </div>
     </div>
     <div class="flex items-center p-6">
-      <button
-        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
+      <a
+        href="/"
+        @click.prevent="$refs.createHouseholdCard.remove()"
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
       >
-        Create Household
+        Cancel
+      </a>
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
+      >
+        Update Household
       </button>
     </div>
   </form>
