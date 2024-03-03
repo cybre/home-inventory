@@ -38,5 +38,6 @@ func Initialize(e *echo.Echo, authenticator *authenticator.Authenticator, invent
 	e.POST("/households/:householdId/rooms/create", createRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.GET("/households/:householdId/rooms/:roomId/edit", editRoomViewHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 	e.POST("/households/:householdId/rooms/:roomId/edit", editRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
-	e.GET("/households/:householdId/rooms/:roomId/delete", deleteRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
+	e.GET("/households/:householdId/rooms/:roomId/delete", deleteRoomViewHandler(), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
+	e.POST("/households/:householdId/rooms/:roomId/delete", deleteRoomHandler(inventoryClient), auth.IsAuthenticated, mustHaveHousehold(inventoryClient))
 }

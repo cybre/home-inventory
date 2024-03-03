@@ -6,10 +6,9 @@
 >
   <a
     href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/delete"
-    hx-target="#room-edit-{{ $room.RoomID }}"
-    hx-swap="outerHTML"
+    hx-target="#modal-container"
+    hx-swap="innerHTML"
     hx-push-url="false"
-    hx-confirm="Are you sure you want to delete this room?"
     class="z-10 absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
     title="Delete room"
   >

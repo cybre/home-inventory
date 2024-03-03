@@ -38,4 +38,7 @@
 {{ if $.PageData.DeletingHousehold }}
   {{ template "household_confirm_delete" $.PageData.DeletingHousehold }}
 {{ end }}
+{{ if $.PageData.DeletingRoom }}
+  {{ template "room_confirm_delete" $.PageData.DeletingRoom }}
+{{ end }}
 </section>

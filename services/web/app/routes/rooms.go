@@ -172,8 +172,17 @@ func deleteRoomHandler(roomDeleter RoomDeleter) echo.HandlerFunc {
 		householdID := c.Param("householdId")
 		roomID := c.Param("roomId")
 
+		deleteKey := c.FormValue("delete")
+		if deleteKey != "delete" {
+			if htmx.IsHTMXRequest(c) {
+				return toast.Error("Please enter the text exactly as shown to confirm")
+			}
+
+			return c.Redirect(http.StatusFound, "/households/"+householdID+"/rooms/"+roomID+"/delete?invalidKey=true")
+		}
+
 		if err := roomDeleter.DeleteRoom(c.Request().Context(), user.ID, householdID, roomID); err != nil {
-			return toast.Error("Failed to delete room")
+			return fmt.Errorf("failed to delete room: %w", err)
 		}
 
 		if htmx.IsHTMXRequest(c) {
@@ -182,5 +191,28 @@ func deleteRoomHandler(roomDeleter RoomDeleter) echo.HandlerFunc {
 		}
 
 		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
+func deleteRoomViewHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		householdID := c.Param("householdId")
+		roomID := c.Param("roomId")
+
+		data := map[string]interface{}{"HouseholdID": householdID, "RoomID": roomID}
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "room_confirm_delete", data)
+		}
+
+		if c.QueryParam("invalidKey") == "true" {
+			data["InvalidDeleteKey"] = true
+		}
+
+		return c.Render(http.StatusOK, "home", map[string]interface{}{
+			"Title":        "Delete Room",
+			"EditingRoom":  roomID,
+			"DeletingRoom": data,
+		})
 	}
 }
