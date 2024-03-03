@@ -59,7 +59,7 @@ func mustNotHaveHousehold(householdsGetter HouseholdsGetter) echo.MiddlewareFunc
 }
 
 func loadHouseholdsIntoContext(c echo.Context, householdsGetter HouseholdsGetter) {
-	if htmx.IsHTMXRequest(c) {
+	if htmx.ShouldReturnPartial(c) {
 		return
 	}
 

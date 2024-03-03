@@ -13,18 +13,21 @@
     <link href="/static/main.css" rel="stylesheet" />
   </head>
 
-  <body hx-boost="true">
+  <body hx-boost="true" hx-history="false" hx-push-url="false">
     <div class="flex min-h-screen w-full">
       <div class="flex flex-col w-full">
         {{ template "header" . }}
-        <main class="flex flex-1 flex-col gap-4 p-2 md:gap-8 xl:p-6" id="main-container">
+        <main
+          class="flex flex-1 flex-col gap-4 p-2 md:gap-8 xl:p-6"
+          id="main-container"
+        >
           {{ yield }}
         </main>
       </div>
     </div>
 
     <div
-      class="fixed top-5 right-5 w-[350px]  z-50"
+      class="fixed top-5 right-5 w-[350px] z-50"
       x-data="{
         titleColors: {error: 'text-red-800', info: 'text-blue-800', success: 'text-green-800', warning: 'text-yellow-800'},
         messageColors: {error: 'text-red-700', info: 'text-blue-700', success: 'text-green-700', warning: 'text-yellow-700'},
@@ -170,11 +173,11 @@
       });
 
       const levelTimings = {
-        error: 5000,
-        info: 3000,
-        success: 3000,
-        warning: 5000,
-      };
+          error: 5000,
+          info: 3000,
+          success: 3000,
+          warning: 5000,
+        };
 
       document.body.addEventListener("show-toast", (event) => {
         Alpine.store("toasts").createToast(

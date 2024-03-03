@@ -44,7 +44,6 @@
       <form
         action="/households/{{ $householdId }}/rooms/{{ $roomId }}/delete"
         method="POST"
-        hx-push-url="false"
         hx-target="#room-edit-{{ $roomId }}"
         hx-swap="outerHTML"
         @htmx:after-request.window="if (event.detail.successful) { $refs.popupModal.remove(); }"

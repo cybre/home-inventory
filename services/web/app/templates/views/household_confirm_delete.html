@@ -43,7 +43,6 @@
       <form
         action="/households/{{ $householdId }}/delete"
         method="POST"
-        hx-push-url="false"
         hx-target="#household-edit-{{ $householdId }}"
         hx-swap="outerHTML"
         @htmx:after-request.window="if (event.detail.successful) { $refs.popupModal.remove(); }"

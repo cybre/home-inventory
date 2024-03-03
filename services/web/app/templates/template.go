@@ -76,7 +76,7 @@ func (t *Renderer) Render(w io.Writer, name string, pageData interface{}, c echo
 	}
 
 	opts := []render.HTMLOptions{}
-	if htmx.IsHTMXRequest(c) {
+	if htmx.ShouldReturnPartial(c) {
 		opts = append(opts, render.HTMLOptions{Layout: "empty_layout"})
 	} else {
 		pageData = map[string]interface{}{

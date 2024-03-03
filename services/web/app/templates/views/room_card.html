@@ -8,7 +8,6 @@
     href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/edit"
     hx-target="#room-{{ $room.RoomID }}"
     hx-swap="outerHTML"
-    hx-push-url="false"
     class="z-10 absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
     title="Edit room"
   >
@@ -30,6 +29,7 @@
   </a>
   <a
     href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/items"
+    hx-push-url="true"
     class="flex items-center justify-center"
   >
     <div class="flex-col p-6 flex items-center gap-4 max-w-full">

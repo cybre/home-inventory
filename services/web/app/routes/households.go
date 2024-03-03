@@ -41,8 +41,9 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 			return fmt.Errorf("failed to create household: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			toast.Success(c, "Household has been created successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "household_card", map[string]interface{}{
 				"Household": shared.UserHousehold{
 					UserID:      request.UserID,
@@ -63,7 +64,7 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 
 func createHouseholdViewHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "household_create", nil)
 		}
 
@@ -91,7 +92,8 @@ func getHouseholdHandler(householdGetter HouseholdGetter) echo.HandlerFunc {
 			return fmt.Errorf("failed to get household: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "household_card", map[string]interface{}{
 				"Household": household,
 			})
@@ -134,9 +136,9 @@ func editHouseholdHandler(householdUpdater HouseholdUpdater) echo.HandlerFunc {
 		household.Location = c.FormValue("location")
 		household.Description = c.FormValue("description")
 
-		toast.Success(c, "Household has been updated successfully")
-
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
+			toast.Success(c, "Household has been updated successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "household_card", map[string]interface{}{
 				"Household": household,
 			})
@@ -159,7 +161,7 @@ func editHouseholdViewHandler(householdGetter HouseholdGetter) echo.HandlerFunc 
 			return fmt.Errorf("failed to get household: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "household_edit", household)
 		}
 
@@ -176,7 +178,7 @@ func deleteHouseholdViewHandler() echo.HandlerFunc {
 
 		data := map[string]interface{}{"HouseholdID": householdID}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "household_confirm_delete", data)
 		}
 
@@ -218,8 +220,9 @@ func deleteHouseholdHandler(householdDeleter HouseholdDeleter) echo.HandlerFunc 
 			return fmt.Errorf("failed to delete household: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			toast.Success(c, "Household has been deleted successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.NoContent(http.StatusOK)
 		}
 

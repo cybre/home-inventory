@@ -10,7 +10,6 @@
   <form
     action="/households/{{ $householdId }}/rooms/create"
     method="POST"
-    hx-push-url="false"
     hx-target="#room-add-{{ $householdId }}-{{ $timestamp }}"
     hx-swap="outerHTML"
     class="flex flex-col gap-2"

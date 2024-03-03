@@ -8,7 +8,6 @@
     href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}/delete"
     hx-target="#modal-container"
     hx-swap="innerHTML"
-    hx-push-url="false"
     class="z-10 absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
     title="Delete room"
   >
@@ -33,7 +32,6 @@
     method="POST"
     hx-target="#room-edit-{{ $room.RoomID }}"
     hx-swap="outerHTML"
-    hx-push-url="false"
     class="flex flex-col gap-2 p-2"
   >
     <div class="space-y-1">
@@ -55,7 +53,6 @@
     <div class="flex items-center gap-2">
       <a
         href="/households/{{ $room.HouseholdID }}/rooms/{{ $room.RoomID }}"
-        hx-push-url="false"
         hx-target="#room-edit-{{ $room.RoomID }}"
         hx-swap="outerHTML"
         class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2 py-1"

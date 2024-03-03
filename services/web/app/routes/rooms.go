@@ -32,7 +32,8 @@ func getRoomHandler(roomGetter RoomGetter) echo.HandlerFunc {
 			return fmt.Errorf("failed to get room: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "room_card", room)
 		}
 
@@ -64,8 +65,9 @@ func createRoomHandler(roomCreator RoomCreator) echo.HandlerFunc {
 			return toast.Error("Failed to add room")
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			toast.Success(c, "Room has added successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "room_card", shared.UserHouseholdRoom{
 				HouseholdID: request.HouseholdID,
 				RoomID:      request.RoomID,
@@ -81,7 +83,7 @@ func createRoomViewHandler() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		householdId := c.Param("householdId")
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "room_add", householdId)
 		}
 
@@ -123,8 +125,9 @@ func editRoomHandler(roomUpdater RoomUpdater) echo.HandlerFunc {
 
 		room.Name = c.FormValue("name")
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			toast.Success(c, "Room has been updated successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.Render(http.StatusOK, "room_card", room)
 		}
 
@@ -147,7 +150,7 @@ func editRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
 			return fmt.Errorf("failed to get room: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "room_edit", room)
 		}
 
@@ -185,8 +188,9 @@ func deleteRoomHandler(roomDeleter RoomDeleter) echo.HandlerFunc {
 			return fmt.Errorf("failed to delete room: %w", err)
 		}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			toast.Success(c, "Room has been deleted successfully")
+			htmx.ReplaceUrl(c, "/")
 			return c.NoContent(http.StatusOK)
 		}
 
@@ -201,7 +205,7 @@ func deleteRoomViewHandler() echo.HandlerFunc {
 
 		data := map[string]interface{}{"HouseholdID": householdID, "RoomID": roomID}
 
-		if htmx.IsHTMXRequest(c) {
+		if htmx.ShouldReturnPartial(c) {
 			return c.Render(http.StatusOK, "room_confirm_delete", data)
 		}
 
