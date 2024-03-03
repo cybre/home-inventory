@@ -46,7 +46,7 @@
         hx-target="#household-edit-{{ $householdId }}"
         hx-swap="outerHTML"
         @htmx:after-request.window="if (event.detail.successful) { $refs.popupModal.remove(); }"
-        class="flex flex-col gap-2 px-4 pb-4 pt-2 md:px-5 md:pb-4"
+        class="flex flex-col gap-2 px-4 pb-4 pt-2 md:px-5 md:pb-4 group"
       >
         <div class="pb-1">
           <input
@@ -54,6 +54,8 @@
             name="delete"
             required=""
             autocomplete="off"
+            pattern="delete"
+            title="Please enter the text exactly as shown to confirm"
           />
           {{ if $invalidDeleteKey }}
           <span class="text-xs text-destructive">Please enter the text exactly as shown to confirm</span>
@@ -68,20 +70,8 @@
             Cancel
           </a>
           <button
-            x-init="
-              const deleteInput = $refs.popupModal.querySelector('input[name=delete]');
-              const deleteButton = $refs.popupModal.querySelector('button[type=submit]');
-              deleteButton.setAttribute('disabled', 'disabled');
-
-              deleteInput.addEventListener('input', function() {
-                if (deleteInput.value === 'delete') {
-                  deleteButton.removeAttribute('disabled');
-                } else {
-                  deleteButton.setAttribute('disabled', 'disabled');
-                }
-              });"
             type="submit"
-            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-primary-foreground hover:bg-destructive/90 h-10 px-4 py-2 ml-auto"
+            class="group-invalid:pointer-events-none group-invalid:opacity-50 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-primary-foreground hover:bg-destructive/90 h-10 px-4 py-2 ml-auto"
           > 
             Delete
           </button>
