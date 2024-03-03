@@ -153,7 +153,7 @@ func editRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
 
 		return c.Render(http.StatusOK, "home", map[string]interface{}{
 			"Title":       "Edit Room",
-			"EditingRoom": room,
+			"EditingRoom": room.RoomID,
 		})
 	}
 }

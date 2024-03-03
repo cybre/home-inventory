@@ -1,8 +1,8 @@
 {{ define "title-home" }} {{ $.PageData.Title }} {{ end }}
 
-<div class="grid gap-2 lg:gap-4 md:grid-cols-2 2xl:grid-cols-3" hx-boost="true">
+<div class="grid gap-2 lg:gap-4 md:grid-cols-2 2xl:grid-cols-3">
   {{ range $household := .Households }}
-    {{ if and $.PageData.Editing (eq $.PageData.Editing.HouseholdID $household.HouseholdID) }}
+    {{ if and $.PageData.EditingHousehold (eq $.PageData.EditingHousehold $household.HouseholdID) }}
       {{ template "household_edit" $household }} 
     {{ else }}
       {{ template "household_card" dict "Household" $household "EditingRoom" $.PageData.EditingRoom "AddingRoom" (eq $.PageData.AddingRoom $household.HouseholdID) }} 
@@ -33,3 +33,9 @@
     </svg>
   </a>
 </div>
+
+<section id="modal-container">
+{{ if $.PageData.DeletingHousehold }}
+  {{ template "household_confirm_delete" $.PageData.DeletingHousehold }}
+{{ end }}
+</section>

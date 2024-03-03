@@ -42,6 +42,7 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 		}
 
 		if htmx.IsHTMXRequest(c) {
+			toast.Success(c, "Household has been created successfully")
 			return c.Render(http.StatusOK, "household_card", map[string]interface{}{
 				"Household": shared.UserHousehold{
 					UserID:      request.UserID,
@@ -163,8 +164,30 @@ func editHouseholdViewHandler(householdGetter HouseholdGetter) echo.HandlerFunc 
 		}
 
 		return c.Render(http.StatusOK, "home", map[string]interface{}{
-			"Title":   "Edit Household",
-			"Editing": household,
+			"Title":            "Edit Household",
+			"EditingHousehold": household.HouseholdID,
+		})
+	}
+}
+
+func deleteHouseholdViewHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		householdID := c.Param("householdId")
+
+		data := map[string]interface{}{"HouseholdID": householdID}
+
+		if htmx.IsHTMXRequest(c) {
+			return c.Render(http.StatusOK, "household_confirm_delete", data)
+		}
+
+		if c.QueryParam("invalidKey") == "true" {
+			data["InvalidDeleteKey"] = true
+		}
+
+		return c.Render(http.StatusOK, "home", map[string]interface{}{
+			"Title":             "Delete Household",
+			"EditingHousehold":  householdID,
+			"DeletingHousehold": data,
 		})
 	}
 }
@@ -178,6 +201,15 @@ func deleteHouseholdHandler(householdDeleter HouseholdDeleter) echo.HandlerFunc 
 		user, ok := helpers.GetUser(c)
 		if !ok {
 			return fmt.Errorf("user not found")
+		}
+
+		deleteKey := c.FormValue("delete")
+		if deleteKey != "delete" {
+			if htmx.IsHTMXRequest(c) {
+				return toast.Error("Please enter the text exactly as shown to confirm")
+			}
+
+			return c.Redirect(http.StatusFound, "/households/"+c.Param("householdId")+"/delete?invalidKey=true")
 		}
 
 		householdID := c.Param("householdId")
