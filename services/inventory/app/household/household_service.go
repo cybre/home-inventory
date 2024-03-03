@@ -2,6 +2,7 @@ package household
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cybre/home-inventory/internal/utils"
 	"github.com/cybre/home-inventory/services/inventory/app/common"
@@ -28,12 +29,24 @@ func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdR
 }
 
 func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.CreateHouseholdCommandData) error {
+	households, err := s.repository.GetUserHouseholds(ctx, data.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to get user households: %w", err)
+	}
+
+	for _, household := range households {
+		if household.Name == data.Name {
+			return fmt.Errorf("household with name %s already exists", data.Name)
+		}
+	}
+
 	return s.commandBus.Dispatch(ctx, household.CreateHouseholdCommand{
 		HouseholdID: data.HouseholdID,
 		UserID:      data.UserID,
 		Name:        data.Name,
 		Location:    data.Location,
 		Description: data.Description,
+		Order:       uint(len(households)) + 1,
 	})
 }
 

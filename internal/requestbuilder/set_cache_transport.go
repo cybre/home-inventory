@@ -47,6 +47,9 @@ func (t SetCacheTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 
 	for _, fn := range t.SetFns {
 		key, value := fn()
+		if key == "" {
+			continue
+		}
 
 		if value == nil {
 			if err := t.Cache.Delete(req.Context(), key); err != nil {

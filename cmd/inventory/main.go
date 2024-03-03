@@ -10,7 +10,6 @@ import (
 	"github.com/cybre/home-inventory/internal/infrastructure"
 	apphousehold "github.com/cybre/home-inventory/services/inventory/app/household"
 	"github.com/cybre/home-inventory/services/inventory/domain/household"
-	"github.com/cybre/home-inventory/services/inventory/domain/services"
 
 	"github.com/cybre/home-inventory/internal/cassandra"
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
@@ -51,17 +50,7 @@ func main() {
 	}
 	defer eventMessaging.Close()
 
-	eventStore, err := infrastructure.NewCassandraEventStore(cassandraSession)
-	if err != nil {
-		panic(err)
-	}
-	commandBus := es.NewCommandBus(eventStore, eventMessaging)
-
-	userHouseholdRepository := apphousehold.NewUserHouseholdRepository(cassandraSession)
-	householdService := apphousehold.NewHouseholdService(commandBus, userHouseholdRepository)
-
-	householdDomainService := services.NewHouseholdDomainService(householdService)
-	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate(householdDomainService))
+	es.RegisterAggregateRoot(household.HouseholdAggregateType, household.NewHouseholdAggregate)
 	es.RegisterEvent(household.HouseholdCreatedEvent{})
 	es.RegisterEvent(household.HouseholdUpdatedEvent{})
 	es.RegisterEvent(household.HouseholdDeletedEvent{})
@@ -70,6 +59,15 @@ func main() {
 	es.RegisterEvent(household.RoomDeletedEvent{})
 	es.RegisterEvent(household.ItemAddedEvent{})
 	es.RegisterEvent(household.ItemUpdatedEvent{})
+
+	eventStore, err := infrastructure.NewCassandraEventStore(cassandraSession)
+	if err != nil {
+		panic(err)
+	}
+	commandBus := es.NewCommandBus(eventStore, eventMessaging)
+
+	userHouseholdRepository := apphousehold.NewUserHouseholdRepository(cassandraSession)
+	householdService := apphousehold.NewHouseholdService(commandBus, userHouseholdRepository)
 
 	if err := kafkatransport.NewKafkaTransport(ctx, eventMessaging, userHouseholdRepository); err != nil {
 		panic(err)

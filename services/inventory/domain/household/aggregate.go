@@ -23,8 +23,6 @@ type HouseholdService interface {
 type HouseholdAgregate struct {
 	es.AggregateContext
 
-	householdService HouseholdService
-
 	UserID      c.UserID
 	Name        HouseholdName
 	Location    HouseholdLocation
@@ -36,12 +34,9 @@ type HouseholdAgregate struct {
 	Deleted bool
 }
 
-func NewHouseholdAggregate(householdService HouseholdService) es.AggregateRootFactoryFunc {
-	return func(aggregateContext es.AggregateContext) es.AggregateRoot {
-		return &HouseholdAgregate{
-			AggregateContext: aggregateContext,
-			householdService: householdService,
-		}
+func NewHouseholdAggregate(aggregateContext es.AggregateContext) es.AggregateRoot {
+	return &HouseholdAgregate{
+		AggregateContext: aggregateContext,
 	}
 }
 
@@ -106,14 +101,6 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 		return nil, err
 	}
 
-	nameAvailable, err := a.householdService.CheckHouseholdNameAvailability(ctx, userId, name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check household name availability: %w", err)
-	}
-	if !nameAvailable {
-		return nil, fmt.Errorf("household with name [%s] already exists", command.Name)
-	}
-
 	location, err := NewHouseholdLocation(command.Location)
 	if err != nil {
 		return nil, err
@@ -124,18 +111,13 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 		return nil, err
 	}
 
-	householdCount, err := a.householdService.GetHouseholdCount(ctx, userId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get household count: %w", err)
-	}
-
 	return c.Events(HouseholdCreatedEvent{
 		HouseholdID: a.AggregateID().String(),
 		UserID:      userId.String(),
 		Name:        name.String(),
 		Location:    location.String(),
 		Description: description.String(),
-		Order:       householdCount + 1,
+		Order:       command.Order,
 		Timestamp:   time.Now().UnixMilli(),
 	})
 }

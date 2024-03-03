@@ -88,6 +88,17 @@ func (c InventoryClient) CreateHousehold(ctx context.Context, household CreateHo
 					Order:       1,
 				},
 			}
+		}, func() (string, any) {
+			return fmt.Sprintf(GetUserHouseholdCacheKeyFormat, household.UserID, household.HouseholdID), shared.UserHousehold{
+				UserID:      household.UserID,
+				HouseholdID: household.HouseholdID,
+				Name:        household.Name,
+				Location:    household.Location,
+				Description: household.Description,
+				Rooms:       []shared.UserHouseholdRoom{},
+				Timestamp:   timestamp,
+				Order:       0,
+			}
 		}).
 		WithRetry().
 		Do(ctx)
@@ -199,6 +210,17 @@ func (c InventoryClient) AddRoom(ctx context.Context, room AddRoomRequest) error
 			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, room.UserID, room.HouseholdID),
 			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, room.UserID),
 		).
+		WithSetCacheFn(c.cache, func() (string, any) {
+			uhr := shared.UserHouseholdRoom{
+				HouseholdID: room.HouseholdID,
+				RoomID:      room.RoomID,
+				Name:        room.Name,
+				Order:       0,
+				Timestamp:   0,
+			}
+
+			return fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, room.UserID, room.HouseholdID, room.RoomID), uhr
+		}).
 		WithRetry().
 		Do(ctx)
 	if err != nil {
@@ -229,8 +251,18 @@ func (c InventoryClient) UpdateRoom(ctx context.Context, room UpdateRoomRequest)
 			c.cache,
 			fmt.Sprintf(GetUserHouseholdCacheKeyFormat, room.UserID, room.HouseholdID),
 			fmt.Sprintf(GetUserHouseholdsCacheKeyFormat, room.UserID),
-			fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, room.UserID, room.HouseholdID, room.RoomID),
 		).
+		WithSetCacheFn(c.cache, func() (string, any) {
+			uhr := shared.UserHouseholdRoom{
+				HouseholdID: room.HouseholdID,
+				RoomID:      room.RoomID,
+				Name:        room.Name,
+				Order:       0,
+				Timestamp:   0,
+			}
+
+			return fmt.Sprintf(GetUserHouseholdRoomCacheKeyFormat, room.UserID, room.HouseholdID, room.RoomID), uhr
+		}).
 		WithRetry().
 		Do(ctx)
 	if err != nil {
