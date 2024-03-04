@@ -6,7 +6,6 @@ import (
 
 	"github.com/bnkamalesh/errors"
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
-	"github.com/cybre/home-inventory/services/inventory/domain/common"
 	c "github.com/cybre/home-inventory/services/inventory/domain/common"
 )
 
@@ -14,11 +13,6 @@ const (
 	HouseholdAggregateType  es.AggregateType = "HouseholdAggregate"
 	initialAggregateVersion                  = 0
 )
-
-type HouseholdService interface {
-	GetHouseholdCount(ctx context.Context, userID common.UserID) (uint, error)
-	CheckHouseholdNameAvailability(ctx context.Context, userID common.UserID, name HouseholdName) (bool, error)
-}
 
 type HouseholdAgregate struct {
 	es.AggregateContext
@@ -192,6 +186,10 @@ func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command
 
 	room, err = room.Update(command.Name)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := a.Rooms.Update(room); err != nil {
 		return nil, err
 	}
 
