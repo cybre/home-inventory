@@ -766,6 +766,14 @@ body {
   max-height: 100%;
 }
 
+.max-h-\[475px\] {
+  max-height: 475px;
+}
+
+.max-h-\[472px\] {
+  max-height: 472px;
+}
+
 .min-h-32 {
   min-height: 8rem;
 }
@@ -784,6 +792,18 @@ body {
 
 .min-h-screen {
   min-height: 100vh;
+}
+
+.min-h-\[120px\] {
+  min-height: 120px;
+}
+
+.min-h-\[130px\] {
+  min-height: 130px;
+}
+
+.min-h-\[112px\] {
+  min-height: 112px;
 }
 
 .w-10 {
