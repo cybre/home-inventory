@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/PuerkitoBio/rehttp v1.3.0
+	github.com/bnkamalesh/errors v0.11.1
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/eko/gocache/lib/v4 v4.1.5
 	github.com/eko/gocache/store/redis/v4 v4.2.1

@@ -1,14 +1,14 @@
 package common
 
 import (
-	"fmt"
+	"github.com/bnkamalesh/errors"
 )
 
 type UserID string
 
 func NewUserID(id string) (UserID, error) {
 	if id == "" {
-		return "", fmt.Errorf("user id cannot be empty")
+		return "", errors.InputBody("user id is required")
 	}
 
 	return UserID(id), nil

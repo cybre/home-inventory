@@ -12,6 +12,7 @@ import (
 	internalcache "github.com/cybre/home-inventory/internal/cache"
 	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/internal/middleware"
+	"github.com/cybre/home-inventory/internal/utils"
 	inventoryclient "github.com/cybre/home-inventory/services/inventory/client"
 	"github.com/cybre/home-inventory/services/web/app/routes"
 	"github.com/cybre/home-inventory/services/web/app/templates"
@@ -30,7 +31,15 @@ func New(ctx context.Context, serverAddress string, logger *slog.Logger) error {
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		te, ok := err.(toast.Toast)
 		if !ok {
-			te = toast.Error("There has been an unexpected error")
+			if herr, ok := err.(*echo.HTTPError); ok {
+				if message, ok := herr.Message.(string); ok {
+					te = toast.Error(utils.FirstLetterUppercase(message))
+				} else {
+					te = toast.Error("An unexpected error occurred")
+				}
+			} else {
+				te = toast.Error("An unexpected error occurred")
+			}
 		}
 
 		if te.Level != toast.SUCCESS {

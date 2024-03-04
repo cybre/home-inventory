@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bnkamalesh/errors"
 	"github.com/cybre/home-inventory/internal/logging"
 	"github.com/cybre/home-inventory/internal/middleware"
 	"github.com/cybre/home-inventory/services/inventory/shared"
@@ -37,6 +38,20 @@ type HouseholdService interface {
 
 func NewHTTPTransport(ctx context.Context, serverAddress string, householdService HouseholdService) error {
 	e := echo.New()
+
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return
+		}
+
+		code, message, _ := errors.HTTPStatusCodeMessage(err)
+
+		if c.Request().Method == http.MethodHead {
+			err = c.NoContent(code)
+		} else {
+			err = c.String(code, message)
+		}
+	}
 
 	logger := logging.FromContext(ctx)
 

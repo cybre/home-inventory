@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
+	"github.com/bnkamalesh/errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
@@ -34,12 +33,12 @@ func NewHandler[T any](inputHandler Handler[T], opts ...Option[T]) echo.HandlerF
 	return func(c echo.Context) error {
 		data, err := handler.inputBinder(c)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			return errors.InputBodyErr(err, err.Error())
 		}
 
 		if handler.inputValidator != nil {
 			if err := handler.inputValidator(data); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				return errors.InputBodyErr(err, err.Error())
 			}
 		}
 

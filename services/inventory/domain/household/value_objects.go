@@ -1,9 +1,9 @@
 package household
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/bnkamalesh/errors"
 	"github.com/google/uuid"
 )
 
@@ -26,8 +26,10 @@ const (
 type HouseholdName string
 
 func NewHouseholdName(name string) (HouseholdName, error) {
+	name = strings.TrimSpace(name)
+
 	if len(name) < MinHouseholdNameLength || len(name) > MaxHouseholdNameLength {
-		return "", fmt.Errorf("household name must be between %d and %d characters: %s", MinHouseholdNameLength, MaxHouseholdNameLength, name)
+		return "", errors.InputBodyf("household name must be between %d and %d characters: %s", MinHouseholdNameLength, MaxHouseholdNameLength, name)
 	}
 
 	return HouseholdName(name), nil
@@ -40,8 +42,10 @@ func (n HouseholdName) String() string {
 type HouseholdLocation string
 
 func NewHouseholdLocation(location string) (HouseholdLocation, error) {
+	location = strings.TrimSpace(location)
+
 	if len(location) < MinHouseholdLocationLength || len(location) > MaxHouseholdLocationLength {
-		return "", fmt.Errorf("household location must be between %d and %d characters: %s", MinHouseholdLocationLength, MaxHouseholdLocationLength, location)
+		return "", errors.InputBodyf("household location must be between %d and %d characters: %s", MinHouseholdLocationLength, MaxHouseholdLocationLength, location)
 	}
 
 	return HouseholdLocation(location), nil
@@ -54,8 +58,10 @@ func (l HouseholdLocation) String() string {
 type HouseholdDescription string
 
 func NewHouseholdDescription(description string) (HouseholdDescription, error) {
+	description = strings.TrimSpace(description)
+
 	if len(description) > MaxHouseholdDescriptionLength {
-		return "", fmt.Errorf("household description must be less than %d characters", MaxHouseholdDescriptionLength)
+		return "", errors.InputBodyf("household description must be less than %d characters", MaxHouseholdDescriptionLength)
 	}
 
 	return HouseholdDescription(description), nil
@@ -63,16 +69,6 @@ func NewHouseholdDescription(description string) (HouseholdDescription, error) {
 
 func (d HouseholdDescription) String() string {
 	return string(d)
-}
-
-type HouseholdOrder uint
-
-func NewHouseholdOrder(order uint) (HouseholdOrder, error) {
-	return HouseholdOrder(order), nil
-}
-
-func (o HouseholdOrder) Uint() uint {
-	return uint(o)
 }
 
 type Rooms map[RoomID]Room
@@ -83,11 +79,11 @@ func NewRooms() Rooms {
 
 func (r Rooms) Add(room Room) error {
 	if _, ok := r.Get(room.ID); ok {
-		return fmt.Errorf("room with ID %s already exists", room.ID)
+		return errors.Duplicatef("room with ID %s already exists", room.ID)
 	}
 
 	if _, ok := r.FindByName(room.Name); ok {
-		return fmt.Errorf("room with name %s already exists", room.Name)
+		return errors.Duplicatef("room with name %s already exists", room.Name)
 	}
 
 	r[room.ID] = room
@@ -113,11 +109,11 @@ func (r Rooms) FindByName(name RoomName) (Room, bool) {
 
 func (r Rooms) Update(room Room) error {
 	if _, ok := r.Get(room.ID); !ok {
-		return fmt.Errorf("room with ID %s does not exist", room.ID)
+		return errors.NotFoundf("room with ID %s does not exist", room.ID)
 	}
 
 	if _, ok := r.Without(room.ID).FindByName(room.Name); ok {
-		return fmt.Errorf("room with name %s already exists", room.Name)
+		return errors.Duplicatef("room with name %s already exists", room.Name)
 	}
 
 	r[room.ID] = room
@@ -149,7 +145,7 @@ type Room struct {
 	ID    RoomID
 	Name  RoomName
 	Items Items
-	Order RoomOrder
+	Order uint
 }
 
 func NewRoom(id, name string, order uint) (Room, error) {
@@ -163,16 +159,11 @@ func NewRoom(id, name string, order uint) (Room, error) {
 		return Room{}, err
 	}
 
-	roomOrder, err := NewRoomOrder(order)
-	if err != nil {
-		return Room{}, err
-	}
-
 	return Room{
 		ID:    roomID,
 		Name:  roomName,
 		Items: make(Items),
-		Order: roomOrder,
+		Order: order,
 	}, nil
 }
 
@@ -195,7 +186,7 @@ type RoomID string
 func NewRoomID(id string) (RoomID, error) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		return "", fmt.Errorf("invalid room ID. must be valid UUID: %s", id)
+		return "", errors.InputBodyf("invalid room ID. must be valid UUID: %s", id)
 	}
 
 	return RoomID(uuid.String()), nil
@@ -208,34 +199,24 @@ func (id RoomID) String() string {
 type RoomName string
 
 func NewRoomName(name string) (RoomName, error) {
-	clean := strings.TrimSpace(name)
+	name = strings.TrimSpace(name)
 
-	if len(clean) < MinRoomNameLength || len(clean) > MaxRoomNameLength {
-		return "", fmt.Errorf("room name must be between %d and %d characters", MinRoomNameLength, MaxRoomNameLength)
+	if len(name) < MinRoomNameLength || len(name) > MaxRoomNameLength {
+		return "", errors.InputBodyf("room name must be between %d and %d characters", MinRoomNameLength, MaxRoomNameLength)
 	}
 
-	return RoomName(clean), nil
+	return RoomName(name), nil
 }
 
 func (n RoomName) String() string {
 	return string(n)
 }
 
-type RoomOrder uint
-
-func NewRoomOrder(order uint) (RoomOrder, error) {
-	return RoomOrder(order), nil
-}
-
-func (o RoomOrder) Uint() uint {
-	return uint(o)
-}
-
 type Items map[ItemID]Item
 
 func (i Items) Add(item Item) error {
 	if _, ok := i.Get(item.ID); ok {
-		return fmt.Errorf("item with ID %s already exists", item.ID)
+		return errors.Duplicatef("item with ID %s already exists", item.ID)
 	}
 
 	i[item.ID] = item
@@ -245,7 +226,7 @@ func (i Items) Add(item Item) error {
 
 func (i Items) Update(item Item) error {
 	if _, ok := i.Get(item.ID); !ok {
-		return fmt.Errorf("item with ID %s does not exist", item.ID)
+		return errors.NotFoundf("item with ID %s does not exist", item.ID)
 	}
 
 	i[item.ID] = item
@@ -274,7 +255,7 @@ type Item struct {
 	ID       ItemID
 	Name     ItemName
 	Barcode  ItemBarcode
-	Quantity ItemQuantity
+	Quantity uint
 }
 
 func NewItem(id, name, barcode string, quantity uint) (Item, error) {
@@ -293,16 +274,11 @@ func NewItem(id, name, barcode string, quantity uint) (Item, error) {
 		return Item{}, err
 	}
 
-	itemQuantity, err := NewItemQuantity(quantity)
-	if err != nil {
-		return Item{}, err
-	}
-
 	return Item{
 		ID:       itemID,
 		Name:     itemName,
 		Barcode:  itemBarcode,
-		Quantity: itemQuantity,
+		Quantity: quantity,
 	}, nil
 }
 
@@ -317,16 +293,11 @@ func (i Item) Update(name, barcode string, quantity uint) (Item, error) {
 		return Item{}, err
 	}
 
-	itemQuantity, err := NewItemQuantity(quantity)
-	if err != nil {
-		return Item{}, err
-	}
-
 	return Item{
 		ID:       i.ID,
 		Name:     itemName,
 		Barcode:  itemBarcode,
-		Quantity: itemQuantity,
+		Quantity: quantity,
 	}, nil
 }
 
@@ -335,7 +306,7 @@ type ItemID string
 func NewItemID(id string) (ItemID, error) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		return "", fmt.Errorf("item ID is invalid. must be valid UUID: %s", id)
+		return "", errors.InputBodyf("item ID is invalid. must be valid UUID: %s", id)
 	}
 
 	return ItemID(uuid.String()), nil
@@ -348,13 +319,13 @@ func (id ItemID) String() string {
 type ItemName string
 
 func NewItemName(name string) (ItemName, error) {
-	clean := strings.TrimSpace(name)
+	name = strings.TrimSpace(name)
 
-	if len(clean) < MinItemNameLength || len(clean) > MaxItemNameLength {
-		return "", fmt.Errorf("item name is invalid. must be between %d and %d characters: %s", MinItemNameLength, MaxItemNameLength, name)
+	if len(name) < MinItemNameLength || len(name) > MaxItemNameLength {
+		return "", errors.InputBodyf("item name is invalid. must be between %d and %d characters: %s", MinItemNameLength, MaxItemNameLength, name)
 	}
 
-	return ItemName(clean), nil
+	return ItemName(name), nil
 }
 
 func (n ItemName) String() string {
@@ -364,20 +335,11 @@ func (n ItemName) String() string {
 type ItemBarcode string
 
 func NewItemBarcode(barcode string) (ItemBarcode, error) {
+	barcode = strings.TrimSpace(barcode)
 	// TODO: validate barcode
 	return ItemBarcode(barcode), nil
 }
 
 func (b ItemBarcode) String() string {
 	return string(b)
-}
-
-type ItemQuantity uint
-
-func NewItemQuantity(quantity uint) (ItemQuantity, error) {
-	return ItemQuantity(quantity), nil
-}
-
-func (q ItemQuantity) Uint() uint {
-	return uint(q)
 }

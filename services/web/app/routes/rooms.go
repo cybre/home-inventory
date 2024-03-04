@@ -29,7 +29,7 @@ func getRoomHandler(roomGetter RoomGetter) echo.HandlerFunc {
 		roomID := c.Param("roomId")
 		room, err := roomGetter.GetUserHouseholdRoom(c.Request().Context(), user.ID, householdID, roomID)
 		if err != nil {
-			return fmt.Errorf("failed to get room: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -62,7 +62,7 @@ func createRoomHandler(roomCreator RoomCreator) echo.HandlerFunc {
 		}
 
 		if err := roomCreator.AddRoom(c.Request().Context(), request); err != nil {
-			return toast.Error("Failed to add room")
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -111,7 +111,7 @@ func editRoomHandler(roomUpdater RoomUpdater) echo.HandlerFunc {
 
 		room, err := roomUpdater.GetUserHouseholdRoom(c.Request().Context(), user.ID, householdID, roomID)
 		if err != nil {
-			return fmt.Errorf("failed to get room: %w", err)
+			return err
 		}
 
 		if err := roomUpdater.UpdateRoom(c.Request().Context(), client.UpdateRoomRequest{
@@ -120,7 +120,7 @@ func editRoomHandler(roomUpdater RoomUpdater) echo.HandlerFunc {
 			RoomID:      roomID,
 			Name:        c.FormValue("name"),
 		}); err != nil {
-			return toast.Error("Failed to update room")
+			return err
 		}
 
 		room.Name = c.FormValue("name")
@@ -147,7 +147,7 @@ func editRoomViewHandler(roomGetter RoomGetter) echo.HandlerFunc {
 
 		room, err := roomGetter.GetUserHouseholdRoom(c.Request().Context(), user.ID, householdId, roomID)
 		if err != nil {
-			return fmt.Errorf("failed to get room: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -185,7 +185,7 @@ func deleteRoomHandler(roomDeleter RoomDeleter) echo.HandlerFunc {
 		}
 
 		if err := roomDeleter.DeleteRoom(c.Request().Context(), user.ID, householdID, roomID); err != nil {
-			return fmt.Errorf("failed to delete room: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {

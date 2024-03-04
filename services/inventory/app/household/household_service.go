@@ -2,8 +2,8 @@ package household
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/bnkamalesh/errors"
 	"github.com/cybre/home-inventory/internal/utils"
 	"github.com/cybre/home-inventory/services/inventory/app/common"
 	"github.com/cybre/home-inventory/services/inventory/domain/household"
@@ -31,12 +31,12 @@ func NewHouseholdService(commandBus common.CommandBus, repository UserHouseholdR
 func (s HouseholdService) CreateHousehold(ctx context.Context, data shared.CreateHouseholdCommandData) error {
 	households, err := s.repository.GetUserHouseholds(ctx, data.UserID)
 	if err != nil {
-		return fmt.Errorf("failed to get user households: %w", err)
+		return errors.InternalErr(err, "failed to get user households")
 	}
 
 	for _, household := range households {
 		if household.Name == data.Name {
-			return fmt.Errorf("household with name %s already exists", data.Name)
+			return errors.Duplicatef("household with name %s already exists", data.Name)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -110,6 +111,14 @@ func (r *RequestBuilder) WithRetry(additionalStatuses ...int) *RequestBuilder {
 	retryErrorsAndStatuses := []rehttp.RetryFn{
 		rehttp.RetryTimeoutErr(),
 		rehttp.RetryStatusInterval(500, 600),
+		rehttp.RetryIsErr(func(err error) bool {
+			// Retry on connection errors
+			if _, ok := err.(*net.OpError); ok {
+				return true
+			}
+
+			return false
+		}),
 	}
 
 	if len(additionalStatuses) > 0 {

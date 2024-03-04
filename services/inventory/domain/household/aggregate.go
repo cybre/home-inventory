@@ -2,9 +2,9 @@ package household
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/bnkamalesh/errors"
 	es "github.com/cybre/home-inventory/internal/eventsourcing"
 	"github.com/cybre/home-inventory/services/inventory/domain/common"
 	c "github.com/cybre/home-inventory/services/inventory/domain/common"
@@ -27,7 +27,7 @@ type HouseholdAgregate struct {
 	Name        HouseholdName
 	Location    HouseholdLocation
 	Description HouseholdDescription
-	Order       HouseholdOrder
+	Order       uint
 
 	Rooms Rooms
 
@@ -64,6 +64,14 @@ func (a *HouseholdAgregate) ApplyEvent(event es.EventData) {
 }
 
 func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Command) ([]es.EventData, error) {
+	if _, ok := command.(CreateHouseholdCommand); !ok {
+		if a.Version() == initialAggregateVersion || a.Deleted {
+			return nil, errors.NotFound("household with provided ID does not exist")
+		}
+	} else if a.Version() != initialAggregateVersion {
+		return nil, errors.Duplicate("household with provided ID already exists")
+	}
+
 	switch c := command.(type) {
 	case CreateHouseholdCommand:
 		return a.handleCreateHouseholdCommand(ctx, c)
@@ -87,10 +95,6 @@ func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Comman
 }
 
 func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, command CreateHouseholdCommand) ([]es.EventData, error) {
-	if a.Version() != initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID already exists: %s", command.HouseholdID)
-	}
-
 	userId, err := c.NewUserID(command.UserID)
 	if err != nil {
 		return nil, err
@@ -123,10 +127,6 @@ func (a *HouseholdAgregate) handleCreateHouseholdCommand(ctx context.Context, co
 }
 
 func (a *HouseholdAgregate) handleUpdateHouseholdCommand(ctx context.Context, command UpdateHouseholdCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	name, err := NewHouseholdName(command.Name)
 	if err != nil {
 		return nil, err
@@ -153,10 +153,6 @@ func (a *HouseholdAgregate) handleUpdateHouseholdCommand(ctx context.Context, co
 }
 
 func (a *HouseholdAgregate) handleDeleteHouseholdCommand(ctx context.Context, command DeleteHouseholdCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	return c.Events(HouseholdDeletedEvent{
 		HouseholdID: a.AggregateID().String(),
 		UserID:      a.UserID.String(),
@@ -164,10 +160,6 @@ func (a *HouseholdAgregate) handleDeleteHouseholdCommand(ctx context.Context, co
 }
 
 func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command AddRoomCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	newRoom, err := NewRoom(command.RoomID, command.Name, uint(a.Rooms.Count()+1))
 	if err != nil {
 		return nil, err
@@ -182,16 +174,12 @@ func (a *HouseholdAgregate) handleAddRoomCommand(ctx context.Context, command Ad
 		UserID:      a.UserID.String(),
 		RoomID:      newRoom.ID.String(),
 		Name:        newRoom.Name.String(),
-		Order:       newRoom.Order.Uint(),
+		Order:       newRoom.Order,
 		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
 func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command UpdateRoomCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	roomID, err := NewRoomID(command.RoomID)
 	if err != nil {
 		return nil, err
@@ -199,7 +187,7 @@ func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command
 
 	room, ok := a.Rooms.Get(roomID)
 	if !ok {
-		return nil, fmt.Errorf("room with ID %s does not exist", roomID)
+		return nil, errors.NotFoundf("room with ID %s does not exist", roomID)
 	}
 
 	room, err = room.Update(command.Name)
@@ -212,16 +200,12 @@ func (a *HouseholdAgregate) handleUpdateRoomCommand(ctx context.Context, command
 		UserID:      a.UserID.String(),
 		RoomID:      room.ID.String(),
 		Name:        room.Name.String(),
-		Order:       room.Order.Uint(),
+		Order:       room.Order,
 		Timestamp:   time.Now().UnixMilli(),
 	})
 }
 
 func (a *HouseholdAgregate) handleDeleteRoomCommand(ctx context.Context, command DeleteRoomCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	roomID, err := NewRoomID(command.RoomID)
 	if err != nil {
 		return nil, err
@@ -235,10 +219,6 @@ func (a *HouseholdAgregate) handleDeleteRoomCommand(ctx context.Context, command
 }
 
 func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command AddItemCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	roomId, err := NewRoomID(command.RoomID)
 	if err != nil {
 		return nil, err
@@ -246,7 +226,7 @@ func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command Ad
 
 	room, ok := a.Rooms.Get(roomId)
 	if !ok {
-		return nil, fmt.Errorf("room with ID %s does not exist", roomId)
+		return nil, errors.NotFoundf("room with ID %s does not exist", roomId)
 	}
 
 	item, err := NewItem(command.ItemID, command.Name, command.Barcode, command.Quantity)
@@ -264,15 +244,11 @@ func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command Ad
 		ItemID:      item.ID.String(),
 		Name:        item.Name.String(),
 		Barcode:     item.Barcode.String(),
-		Quantity:    item.Quantity.Uint(),
+		Quantity:    item.Quantity,
 	})
 }
 
 func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command UpdateItemCommand) ([]es.EventData, error) {
-	if a.Version() == initialAggregateVersion {
-		return nil, fmt.Errorf("household with provided ID does not exist: %s", command.HouseholdID)
-	}
-
 	roomId, err := NewRoomID(command.RoomID)
 	if err != nil {
 		return nil, err
@@ -280,7 +256,7 @@ func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command
 
 	room, ok := a.Rooms.Get(roomId)
 	if !ok {
-		return nil, fmt.Errorf("room with ID %s does not exist", roomId)
+		return nil, errors.NotFoundf("room with ID %s does not exist", roomId)
 	}
 
 	itemId, err := NewItemID(command.ItemID)
@@ -290,7 +266,7 @@ func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command
 
 	item, ok := room.Items.Get(itemId)
 	if !ok {
-		return nil, fmt.Errorf("item with ID %s does not exist", command.ItemID)
+		return nil, errors.NotFoundf("item with ID %s does not exist", command.ItemID)
 	}
 
 	item, err = item.Update(command.Name, command.Barcode, command.Quantity)
@@ -304,7 +280,7 @@ func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command
 		ItemID:      item.ID.String(),
 		Name:        item.Name.String(),
 		Barcode:     item.Barcode.String(),
-		Quantity:    item.Quantity.Uint(),
+		Quantity:    item.Quantity,
 	})
 }
 
@@ -313,7 +289,7 @@ func (a *HouseholdAgregate) applyHouseholdCreatedEvent(event HouseholdCreatedEve
 	a.Name, _ = NewHouseholdName(event.Name)
 	a.Location, _ = NewHouseholdLocation(event.Location)
 	a.Description, _ = NewHouseholdDescription(event.Description)
-	a.Order, _ = NewHouseholdOrder(event.Order)
+	a.Order = event.Order
 	a.Rooms = NewRooms()
 }
 

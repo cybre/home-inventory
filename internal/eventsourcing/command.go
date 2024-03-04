@@ -70,7 +70,7 @@ func (cb *CommandBus) Dispatch(ctx context.Context, c Command) error {
 
 	result, err := aggregate.HandleCommand(aggCtx, c)
 	if err != nil {
-		return fmt.Errorf("aggregate failed to handle command: %w", err)
+		return err
 	}
 
 	newEvents := utils.Map(result, func(i uint, event EventData) Event {

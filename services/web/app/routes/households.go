@@ -23,7 +23,7 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 	return func(c echo.Context) error {
 		user, ok := helpers.GetUser(c)
 		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "user not found")
+			return fmt.Errorf("user not found")
 		}
 
 		referer := c.Request().Header.Get("Referer")
@@ -38,7 +38,7 @@ func createHouseholdHandler(householdCreator HouseholdCreator) echo.HandlerFunc 
 		}
 
 		if err := householdCreator.CreateHousehold(c.Request().Context(), request); err != nil {
-			return fmt.Errorf("failed to create household: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -89,7 +89,7 @@ func getHouseholdHandler(householdGetter HouseholdGetter) echo.HandlerFunc {
 		householdID := c.Param("householdId")
 		household, err := householdGetter.GetUserHousehold(c.Request().Context(), user.ID, householdID)
 		if err != nil {
-			return fmt.Errorf("failed to get household: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -119,7 +119,7 @@ func editHouseholdHandler(householdUpdater HouseholdUpdater) echo.HandlerFunc {
 
 		household, err := householdUpdater.GetUserHousehold(c.Request().Context(), user.ID, householdID)
 		if err != nil {
-			return fmt.Errorf("failed to get household: %w", err)
+			return err
 		}
 
 		if err := householdUpdater.UpdateHousehold(c.Request().Context(), client.UpdateHouseholdRequest{
@@ -129,7 +129,7 @@ func editHouseholdHandler(householdUpdater HouseholdUpdater) echo.HandlerFunc {
 			Location:    c.FormValue("location"),
 			Description: c.FormValue("description"),
 		}); err != nil {
-			return toast.Error("Failed to update household")
+			return err
 		}
 
 		household.Name = c.FormValue("name")
@@ -158,7 +158,7 @@ func editHouseholdViewHandler(householdGetter HouseholdGetter) echo.HandlerFunc 
 		householdID := c.Param("householdId")
 		household, err := householdGetter.GetUserHousehold(c.Request().Context(), user.ID, householdID)
 		if err != nil {
-			return fmt.Errorf("failed to get household: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {
@@ -217,7 +217,7 @@ func deleteHouseholdHandler(householdDeleter HouseholdDeleter) echo.HandlerFunc 
 		householdID := c.Param("householdId")
 
 		if err := householdDeleter.DeleteHousehold(c.Request().Context(), user.ID, householdID); err != nil {
-			return fmt.Errorf("failed to delete household: %w", err)
+			return err
 		}
 
 		if htmx.ShouldReturnPartial(c) {

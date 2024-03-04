@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -44,7 +45,7 @@ func (c InventoryClient) GetUserHouseholds(ctx context.Context, userId string) (
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, echo.NewHTTPError(resp.StatusCode, "failed to get user households")
+		return nil, propagateError(resp)
 	}
 
 	defer resp.Body.Close()
@@ -107,7 +108,7 @@ func (c InventoryClient) CreateHousehold(ctx context.Context, household CreateHo
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return echo.NewHTTPError(resp.StatusCode, "failed to create household")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -138,7 +139,7 @@ func (c InventoryClient) UpdateHousehold(ctx context.Context, household UpdateHo
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return echo.NewHTTPError(resp.StatusCode, "failed to update household")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -160,7 +161,7 @@ func (c InventoryClient) DeleteHousehold(ctx context.Context, userId, householdI
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return echo.NewHTTPError(resp.StatusCode, "failed to delete household")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -180,7 +181,7 @@ func (c InventoryClient) GetUserHousehold(ctx context.Context, userId, household
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return shared.UserHousehold{}, echo.NewHTTPError(resp.StatusCode, "failed to get household")
+		return shared.UserHousehold{}, propagateError(resp)
 	}
 
 	defer resp.Body.Close()
@@ -228,7 +229,7 @@ func (c InventoryClient) AddRoom(ctx context.Context, room AddRoomRequest) error
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return echo.NewHTTPError(resp.StatusCode, "failed to add room")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -270,7 +271,7 @@ func (c InventoryClient) UpdateRoom(ctx context.Context, room UpdateRoomRequest)
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return echo.NewHTTPError(resp.StatusCode, "failed to update room")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -294,7 +295,7 @@ func (c InventoryClient) DeleteRoom(ctx context.Context, userId, householdId, ro
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return echo.NewHTTPError(resp.StatusCode, "failed to delete room")
+		return propagateError(resp)
 	}
 
 	return nil
@@ -315,7 +316,7 @@ func (c InventoryClient) GetUserHouseholdRoom(ctx context.Context, userID, house
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return shared.UserHouseholdRoom{}, echo.NewHTTPError(resp.StatusCode, "failed to get room")
+		return shared.UserHouseholdRoom{}, propagateError(resp)
 	}
 
 	defer resp.Body.Close()
@@ -326,4 +327,15 @@ func (c InventoryClient) GetUserHouseholdRoom(ctx context.Context, userID, house
 	}
 
 	return room, nil
+}
+
+func propagateError(resp *http.Response) error {
+	defer resp.Body.Close()
+
+	messageBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return echo.NewHTTPError(resp.StatusCode)
+	}
+
+	return echo.NewHTTPError(resp.StatusCode, string(messageBytes))
 }
