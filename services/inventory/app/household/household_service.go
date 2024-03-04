@@ -12,8 +12,8 @@ import (
 
 type UserHouseholdRepo interface {
 	GetUserHouseholds(ctx context.Context, userID string) ([]UserHouseholdModel, error)
-	GetUserHousehold(ctx context.Context, userID, householdID string) (UserHouseholdModel, error)
-	GetRoom(ctx context.Context, userID, householdID, roomID string) (UserHouseholdRoomModel, error)
+	GetUserHousehold(ctx context.Context, userID, householdID string) (UserHouseholdModel, bool, error)
+	GetRoom(ctx context.Context, userID, householdID, roomID string) (UserHouseholdRoomModel, bool, error)
 }
 
 type HouseholdService struct {
@@ -125,18 +125,26 @@ func (s HouseholdService) GetUserHouseholds(ctx context.Context, userID string) 
 }
 
 func (s HouseholdService) GetUserHousehold(ctx context.Context, userID, householdID string) (shared.UserHousehold, error) {
-	household, err := s.repository.GetUserHousehold(ctx, userID, householdID)
+	household, found, err := s.repository.GetUserHousehold(ctx, userID, householdID)
 	if err != nil {
 		return shared.UserHousehold{}, err
+	}
+
+	if !found {
+		return shared.UserHousehold{}, errors.NotFoundf("household with ID %s not found", householdID)
 	}
 
 	return toSharedUserHousehold(household), nil
 }
 
 func (s HouseholdService) GetUserHouseholdRoom(ctx context.Context, userID, householdID, roomID string) (shared.UserHouseholdRoom, error) {
-	room, err := s.repository.GetRoom(ctx, userID, householdID, roomID)
+	room, found, err := s.repository.GetRoom(ctx, userID, householdID, roomID)
 	if err != nil {
 		return shared.UserHouseholdRoom{}, err
+	}
+
+	if !found {
+		return shared.UserHouseholdRoom{}, errors.NotFoundf("room with ID %s not found", roomID)
 	}
 
 	return toSharedUserHouseholdRoom(0, room), nil
