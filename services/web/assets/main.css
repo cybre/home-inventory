@@ -140,3 +140,8 @@
   height: 10px;
   z-index: 11;
 }
+
+
+[data-loading] {
+  display: none;
+}
