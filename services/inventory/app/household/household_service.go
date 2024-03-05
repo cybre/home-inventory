@@ -93,28 +93,6 @@ func (s HouseholdService) DeleteRoom(ctx context.Context, data shared.DeleteRoom
 	})
 }
 
-func (s HouseholdService) AddItem(ctx context.Context, data shared.AddItemCommandData) error {
-	return s.commandBus.Dispatch(ctx, household.AddItemCommand{
-		HouseholdID: data.HouseholdID,
-		RoomID:      data.RoomID,
-		ItemID:      data.ItemID,
-		Name:        data.Name,
-		Barcode:     data.Barcode,
-		Quantity:    data.Quantity,
-	})
-}
-
-func (s HouseholdService) UpdateItem(ctx context.Context, data shared.UpdateItemCommandData) error {
-	return s.commandBus.Dispatch(ctx, household.UpdateItemCommand{
-		HouseholdID: data.HouseholdID,
-		RoomID:      data.RoomID,
-		ItemID:      data.ItemID,
-		Name:        data.Name,
-		Barcode:     data.Barcode,
-		Quantity:    data.Quantity,
-	})
-}
-
 func (s HouseholdService) GetUserHouseholds(ctx context.Context, userID string) ([]shared.UserHousehold, error) {
 	households, err := s.repository.GetUserHouseholds(ctx, userID)
 	if err != nil {

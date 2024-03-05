@@ -27,9 +27,6 @@ type HouseholdService interface {
 	UpdateRoom(context.Context, shared.UpdateRoomCommandData) error
 	DeleteRoom(context.Context, shared.DeleteRoomCommandData) error
 
-	AddItem(context.Context, shared.AddItemCommandData) error
-	UpdateItem(context.Context, shared.UpdateItemCommandData) error
-
 	GetUserHouseholds(context.Context, string) ([]shared.UserHousehold, error)
 	GetUserHousehold(context.Context, string, string) (shared.UserHousehold, error)
 

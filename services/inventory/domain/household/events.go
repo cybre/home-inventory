@@ -10,9 +10,6 @@ const (
 	EventTypeRoomAdded   es.EventType = "RoomAddedEvent"
 	EventTypeRoomUpdated es.EventType = "RoomUpdatedEvent"
 	EventTypeRoomDeleted es.EventType = "RoomDeletedEvent"
-
-	EventTypeItemAdded   es.EventType = "ItemAddedEvent"
-	EventTypeItemUpdated es.EventType = "ItemUpdatedEvent"
 )
 
 type HouseholdCreatedEvent struct {
@@ -85,30 +82,4 @@ type RoomDeletedEvent struct {
 
 func (e RoomDeletedEvent) EventType() es.EventType {
 	return EventTypeRoomDeleted
-}
-
-type ItemAddedEvent struct {
-	HouseholdID string `json:"householdId"`
-	RoomID      string `json:"roomId"`
-	ItemID      string `json:"itemId"`
-	Name        string `json:"name"`
-	Barcode     string `json:"barcode"`
-	Quantity    uint   `json:"quantity"`
-}
-
-func (e ItemAddedEvent) EventType() es.EventType {
-	return EventTypeItemAdded
-}
-
-type ItemUpdatedEvent struct {
-	HouseholdID string `json:"householdId"`
-	RoomID      string `json:"roomId"`
-	ItemID      string `json:"itemId"`
-	Name        string `json:"name"`
-	Barcode     string `json:"barcode"`
-	Quantity    uint   `json:"quantity"`
-}
-
-func (e ItemUpdatedEvent) EventType() es.EventType {
-	return EventTypeItemUpdated
 }

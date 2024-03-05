@@ -32,26 +32,6 @@ func createHouseholdHandler(householdService HouseholdService) eh.Handler[shared
 	}
 }
 
-func addItemHandler(householdService HouseholdService) eh.Handler[shared.AddItemCommandData] {
-	return func(c echo.Context, data shared.AddItemCommandData) error {
-		if err := householdService.AddItem(c.Request().Context(), data); err != nil {
-			return err
-		}
-
-		return c.NoContent(http.StatusCreated)
-	}
-}
-
-func updateItemHandler(householdService HouseholdService) eh.Handler[shared.UpdateItemCommandData] {
-	return func(c echo.Context, data shared.UpdateItemCommandData) error {
-		if err := householdService.UpdateItem(c.Request().Context(), data); err != nil {
-			return err
-		}
-
-		return c.NoContent(http.StatusNoContent)
-	}
-}
-
 func getUserHouseholdsHandler(householdService HouseholdService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userId := c.Param("userId")

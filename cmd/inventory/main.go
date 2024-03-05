@@ -57,8 +57,6 @@ func main() {
 	es.RegisterEvent(household.RoomAddedEvent{})
 	es.RegisterEvent(household.RoomUpdatedEvent{})
 	es.RegisterEvent(household.RoomDeletedEvent{})
-	es.RegisterEvent(household.ItemAddedEvent{})
-	es.RegisterEvent(household.ItemUpdatedEvent{})
 
 	eventStore, err := infrastructure.NewCassandraEventStore(cassandraSession)
 	if err != nil {

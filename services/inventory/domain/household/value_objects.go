@@ -18,9 +18,6 @@ const (
 
 	MinRoomNameLength = 3
 	MaxRoomNameLength = 50
-
-	MinItemNameLength = 3
-	MaxItemNameLength = 100
 )
 
 type HouseholdName string
@@ -144,7 +141,6 @@ func (r Rooms) Count() int {
 type Room struct {
 	ID    RoomID
 	Name  RoomName
-	Items Items
 	Order uint
 }
 
@@ -162,7 +158,6 @@ func NewRoom(id, name string, order uint) (Room, error) {
 	return Room{
 		ID:    roomID,
 		Name:  roomName,
-		Items: make(Items),
 		Order: order,
 	}, nil
 }
@@ -176,7 +171,6 @@ func (r Room) Update(name string) (Room, error) {
 	return Room{
 		ID:    r.ID,
 		Name:  roomName,
-		Items: r.Items,
 		Order: r.Order,
 	}, nil
 }
@@ -210,136 +204,4 @@ func NewRoomName(name string) (RoomName, error) {
 
 func (n RoomName) String() string {
 	return string(n)
-}
-
-type Items map[ItemID]Item
-
-func (i Items) Add(item Item) error {
-	if _, ok := i.Get(item.ID); ok {
-		return errors.Duplicatef("item with ID %s already exists", item.ID)
-	}
-
-	i[item.ID] = item
-
-	return nil
-}
-
-func (i Items) Update(item Item) error {
-	if _, ok := i.Get(item.ID); !ok {
-		return errors.NotFoundf("item with ID %s does not exist", item.ID)
-	}
-
-	i[item.ID] = item
-
-	return nil
-}
-
-func (i Items) Remove(id ItemID) {
-	delete(i, id)
-}
-
-func (i Items) Get(id ItemID) (Item, bool) {
-	item, ok := i[id]
-	if !ok {
-		return Item{}, false
-	}
-
-	return item, true
-}
-
-func (i Items) Count() int {
-	return len(i)
-}
-
-type Item struct {
-	ID       ItemID
-	Name     ItemName
-	Barcode  ItemBarcode
-	Quantity uint
-}
-
-func NewItem(id, name, barcode string, quantity uint) (Item, error) {
-	itemID, err := NewItemID(id)
-	if err != nil {
-		return Item{}, err
-	}
-
-	itemName, err := NewItemName(name)
-	if err != nil {
-		return Item{}, err
-	}
-
-	itemBarcode, err := NewItemBarcode(barcode)
-	if err != nil {
-		return Item{}, err
-	}
-
-	return Item{
-		ID:       itemID,
-		Name:     itemName,
-		Barcode:  itemBarcode,
-		Quantity: quantity,
-	}, nil
-}
-
-func (i Item) Update(name, barcode string, quantity uint) (Item, error) {
-	itemName, err := NewItemName(name)
-	if err != nil {
-		return Item{}, err
-	}
-
-	itemBarcode, err := NewItemBarcode(barcode)
-	if err != nil {
-		return Item{}, err
-	}
-
-	return Item{
-		ID:       i.ID,
-		Name:     itemName,
-		Barcode:  itemBarcode,
-		Quantity: quantity,
-	}, nil
-}
-
-type ItemID string
-
-func NewItemID(id string) (ItemID, error) {
-	uuid, err := uuid.Parse(id)
-	if err != nil {
-		return "", errors.InputBodyf("item ID is invalid. must be valid UUID: %s", id)
-	}
-
-	return ItemID(uuid.String()), nil
-}
-
-func (id ItemID) String() string {
-	return string(id)
-}
-
-type ItemName string
-
-func NewItemName(name string) (ItemName, error) {
-	name = strings.TrimSpace(name)
-
-	if len(name) < MinItemNameLength || len(name) > MaxItemNameLength {
-		return "", errors.InputBodyf("item name is invalid. must be between %d and %d characters: %s", MinItemNameLength, MaxItemNameLength, name)
-	}
-
-	return ItemName(name), nil
-}
-
-func (n ItemName) String() string {
-	return string(n)
-}
-
-type ItemBarcode string
-
-func NewItemBarcode(barcode string) (ItemBarcode, error) {
-	barcode = strings.TrimSpace(barcode)
-	// TODO: validate barcode
-	return ItemBarcode(barcode), nil
-}
-
-func (b ItemBarcode) String() string {
-	return string(b)
 }

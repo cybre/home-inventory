@@ -12,9 +12,5 @@ func NewKafkaTransport(ctx context.Context, eventMessaging *infrastructure.Kafka
 		panic(err)
 	}
 
-	if err := eventMessaging.ConsumeEvents(ctx, household.NewItemProjector()); err != nil {
-		panic(err)
-	}
-
 	return nil
 }

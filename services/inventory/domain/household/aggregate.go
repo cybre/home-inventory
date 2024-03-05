@@ -48,10 +48,6 @@ func (a *HouseholdAgregate) ApplyEvent(event es.EventData) {
 		a.applyRoomUpdatedEvent(e)
 	case RoomDeletedEvent:
 		a.applyRoomDeletedEvent(e)
-	case ItemAddedEvent:
-		a.applyItemAddedEvent(e)
-	case ItemUpdatedEvent:
-		a.applyItemUpdatedEvent(e)
 	default:
 		panic("unknown event type")
 	}
@@ -79,10 +75,6 @@ func (a *HouseholdAgregate) HandleCommand(ctx context.Context, command es.Comman
 		return a.handleUpdateRoomCommand(ctx, c)
 	case DeleteRoomCommand:
 		return a.handleDeleteRoomCommand(ctx, c)
-	case AddItemCommand:
-		return a.handleAddItemCommand(ctx, c)
-	case UpdateItemCommand:
-		return a.handleUpdateItemCommand(ctx, c)
 	default:
 		return nil, es.ErrUnknownCommand
 	}
@@ -216,72 +208,6 @@ func (a *HouseholdAgregate) handleDeleteRoomCommand(ctx context.Context, command
 	})
 }
 
-func (a *HouseholdAgregate) handleAddItemCommand(ctx context.Context, command AddItemCommand) ([]es.EventData, error) {
-	roomId, err := NewRoomID(command.RoomID)
-	if err != nil {
-		return nil, err
-	}
-
-	room, ok := a.Rooms.Get(roomId)
-	if !ok {
-		return nil, errors.NotFoundf("room with ID %s does not exist", roomId)
-	}
-
-	item, err := NewItem(command.ItemID, command.Name, command.Barcode, command.Quantity)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := room.Items.Add(item); err != nil {
-		return nil, err
-	}
-
-	return c.Events(ItemAddedEvent{
-		HouseholdID: a.AggregateID().String(),
-		RoomID:      roomId.String(),
-		ItemID:      item.ID.String(),
-		Name:        item.Name.String(),
-		Barcode:     item.Barcode.String(),
-		Quantity:    item.Quantity,
-	})
-}
-
-func (a *HouseholdAgregate) handleUpdateItemCommand(ctx context.Context, command UpdateItemCommand) ([]es.EventData, error) {
-	roomId, err := NewRoomID(command.RoomID)
-	if err != nil {
-		return nil, err
-	}
-
-	room, ok := a.Rooms.Get(roomId)
-	if !ok {
-		return nil, errors.NotFoundf("room with ID %s does not exist", roomId)
-	}
-
-	itemId, err := NewItemID(command.ItemID)
-	if err != nil {
-		return nil, err
-	}
-
-	item, ok := room.Items.Get(itemId)
-	if !ok {
-		return nil, errors.NotFoundf("item with ID %s does not exist", command.ItemID)
-	}
-
-	item, err = item.Update(command.Name, command.Barcode, command.Quantity)
-	if err != nil {
-		return nil, err
-	}
-
-	return c.Events(ItemUpdatedEvent{
-		HouseholdID: a.AggregateID().String(),
-		RoomID:      roomId.String(),
-		ItemID:      item.ID.String(),
-		Name:        item.Name.String(),
-		Barcode:     item.Barcode.String(),
-		Quantity:    item.Quantity,
-	})
-}
-
 func (a *HouseholdAgregate) applyHouseholdCreatedEvent(event HouseholdCreatedEvent) {
 	a.UserID, _ = c.NewUserID(event.UserID)
 	a.Name, _ = NewHouseholdName(event.Name)
@@ -318,24 +244,4 @@ func (a *HouseholdAgregate) applyRoomUpdatedEvent(event RoomUpdatedEvent) {
 func (a *HouseholdAgregate) applyRoomDeletedEvent(event RoomDeletedEvent) {
 	roomID, _ := NewRoomID(event.RoomID)
 	a.Rooms.Remove(roomID)
-}
-
-func (a *HouseholdAgregate) applyItemAddedEvent(event ItemAddedEvent) {
-	roomID, _ := NewRoomID(event.RoomID)
-	room, _ := a.Rooms.Get(roomID)
-
-	item, _ := NewItem(event.ItemID, event.Name, event.Barcode, event.Quantity)
-	room.Items.Add(item)
-}
-
-func (a *HouseholdAgregate) applyItemUpdatedEvent(event ItemUpdatedEvent) {
-	roomID, _ := NewRoomID(event.RoomID)
-	room, _ := a.Rooms.Get(roomID)
-
-	itemID, _ := NewItemID(event.ItemID)
-	item, _ := room.Items.Get(itemID)
-
-	item, _ = item.Update(event.Name, event.Barcode, event.Quantity)
-
-	room.Items.Update(item)
 }

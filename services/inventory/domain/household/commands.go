@@ -91,37 +91,3 @@ func (c DeleteRoomCommand) AggregateType() es.AggregateType {
 func (c DeleteRoomCommand) AggregateID() es.AggregateID {
 	return es.AggregateID(c.HouseholdID)
 }
-
-type AddItemCommand struct {
-	HouseholdID string
-	RoomID      string
-	ItemID      string
-	Name        string
-	Barcode     string
-	Quantity    uint
-}
-
-func (c AddItemCommand) AggregateType() es.AggregateType {
-	return HouseholdAggregateType
-}
-
-func (c AddItemCommand) AggregateID() es.AggregateID {
-	return es.AggregateID(c.HouseholdID)
-}
-
-type UpdateItemCommand struct {
-	HouseholdID string
-	RoomID      string
-	ItemID      string
-	Name        string
-	Barcode     string
-	Quantity    uint
-}
-
-func (c UpdateItemCommand) AggregateType() es.AggregateType {
-	return HouseholdAggregateType
-}
-
-func (c UpdateItemCommand) AggregateID() es.AggregateID {
-	return es.AggregateID(c.HouseholdID)
-}
