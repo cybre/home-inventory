@@ -7,7 +7,7 @@
   <a
     href="/households/{{ $household.HouseholdID }}/edit"
     hx-target="#household-{{ $household.HouseholdID }}"
-    hx-swap="outerHTML"
+    hx-swap="outerHTML show:bottom"
     class="absolute p-2 top-0 right-0 hover:opacity-60 active:opacity-80 transition-opacity duration-150"
     title="Edit household"
   >
@@ -66,7 +66,7 @@
         <a
           href="/households/{{ $household.HouseholdID }}/rooms/create"
           hx-target="this"
-          hx-swap="beforebegin"
+          hx-swap="beforebegin show:bottom"
           class="rounded-lg border-2 border-dashed text-card-foreground flex justify-center items-center group cursor-pointer hover:border-gray-300 transition-colors duration-150 p-4 min-h-32"
         >
           <svg
