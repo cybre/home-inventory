@@ -125,7 +125,7 @@
           </div>
 
           <div class="pl-2 pr-2">
-            <progress
+            <progress  
               x-data="{ value: 100, colors: {error: 'progress-unfilled:bg-red-100 progress-filled:bg-red-300', info: 'progress-unfilled:bg-blue-100 progress-filled:bg-blue-300', success: 'progress-unfilled:bg-green-100 progress-filled:bg-green-300', warning: 'progress-unfilled:bg-yellow-100 progress-filled:bg-yellow-300'}}"
               x-init="
               setInterval(()=> {
@@ -176,7 +176,7 @@
       const levelTimings = {
           error: 5000,
           info: 3000,
-          success: 3000,
+          success: 1500,
           warning: 5000,
         };
 
